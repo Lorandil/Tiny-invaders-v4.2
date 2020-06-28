@@ -23,8 +23,13 @@
 
 #include <ssd1306xled.h>
 #include "spritebank.h"
+#include "displayscore.h" // sbr
+#include "RLEcompression.h" // sbr
 
 #define MAXLEVELSHIELDED 3
+
+// EEPROM storage address for highscore and name
+const uint16_t TINY_INVADERS_EEPROM_ADDR = 128; // sbr
 
 // var public
 uint8_t Live=0;
@@ -34,13 +39,16 @@ uint8_t LEVELS=0;
 uint8_t SpeedShootMonster=0;
 uint8_t ShipDead=0;
 uint8_t ShipPos=56;
+uint8_t chunkBuffer[128]; // sbr
 // fin var public
 
 void setup() {
-SSD1306.ssd1306_init();
-pinMode(1,INPUT);
-DDRB =DDRB|0b00010000;
-pinMode(A0,INPUT); 
+  SSD1306.ssd1306_init();
+  pinMode(1,INPUT);
+  DDRB =DDRB|0b00010000;
+  pinMode(A0,INPUT); 
+  // restore hiscore from EEPROM
+  initHighScoreStruct( TINY_INVADERS_EEPROM_ADDR ); // sbr
 }
 
 void LoadMonstersLevels(int8_t Levels,SPACE *space){
@@ -57,8 +65,14 @@ void loop() {
   uint8_t MyShootReady=SHOOTS;
 SPACE space;
 NEWGAME:;
+// store hiscore to EEPROM
+storeHighScoreToEEPROM( TINY_INVADERS_EEPROM_ADDR ); // sbr
 Live=3;
 LEVELS=0;
+resetScore(); // sbr
+clearText();  // sbr
+printText( 0, "1UP", 3 ); // sbr
+printText( 18, "HISCORE",7 ); // sbr
 while(1){
 Tiny_Flip(1,&space);
 if (digitalRead(1)==0) {Sound(100,125);Sound(50,125);goto BYPASS2;}
@@ -131,38 +145,53 @@ uint8_t LivePrint(uint8_t x,uint8_t y){
 #define XLIVEWIDE ((5*Live)-1)
 if (((0>=(x-XLIVEWIDE)))&&(y==7)) {
   return pgm_read_byte(&LIVE[(x)]);
- }
+}
 return 0x00;}
 
 void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
 uint8_t y,x; 
 uint8_t MYSHIELD=0x00;
+// select bitmap
+uint8_t *render = ( render0_picture1 == 1 ? intro_compressed : back_compressed ); // sbr
+// we want an arcade style live highscore display
+updateHighScorePoints();        // sbr
+convertValueToDigits( getScore(), getTextBuffer() + 4 ); // sbr
+convertValueToDigits( getHighScorePoints(), getTextBuffer() + 26 ); // sbr
 for (y = 0; y < 8; y++)
 {
-    SSD1306.ssd1306_send_command(0xb0 + y);
-    SSD1306.ssd1306_send_command(0x00); 
-    SSD1306.ssd1306_send_command(0x10);  
-    SSD1306.ssd1306_send_data_start();
-for (x = 0; x < 128; x++)
-{
-if (render0_picture1==0) {
-if (ShieldRemoved==0) {MYSHIELD=MyShield(x,y,space);}else{MYSHIELD=0x00;}
-SSD1306.ssd1306_send_byte(background(x,y,space)|LivePrint(x,y)|Vesso(x,y,space)|UFOWrite(x,y,space)|Monster(x,y,space)|MyShoot(x,y,space)|MonsterShoot(x,y,space)|MYSHIELD);
-}else{SSD1306.ssd1306_send_byte(pgm_read_byte(&intro[x+(y*128)]));}
-}
-if (render0_picture1==0) {
-if (ShieldRemoved==0) {ShieldDestroy(0,space->MyShootBallxpos,space->MyShootBall,space);}
-SSD1306.ssd1306_send_data_stop();
+  // uncompress chunk and save next address
+  render = pgm_RLEdecompress( render, chunkBuffer, 128 ); // sbr
+  
+  SSD1306.ssd1306_send_command(0xb0 + y);
+  SSD1306.ssd1306_send_command(0x00); 
+  SSD1306.ssd1306_send_command(0x10);  
+  SSD1306.ssd1306_send_data_start();
+  
+  for (x = 0; x < 128; x++)
+  {
+    if (render0_picture1==0) {
+      if (ShieldRemoved==0) {MYSHIELD=MyShield(x,y,space);}else{MYSHIELD=0x00;}
+      SSD1306.ssd1306_send_byte(background(x,y,space)|LivePrint(x,y)|Vesso(x,y,space)|UFOWrite(x,y,space)|Monster(x,y,space)|MyShoot(x,y,space)|MonsterShoot(x,y,space)|displayText(x,y)|MYSHIELD); // sbr
+    }
+    else{
+      SSD1306.ssd1306_send_byte(chunkBuffer[x]);  // sbr
+    }
+  }
+  if (render0_picture1==0) {
+    if (ShieldRemoved==0) {ShieldDestroy(0,space->MyShootBallxpos,space->MyShootBall,space);}
+    SSD1306.ssd1306_send_data_stop();
 }}
 if (render0_picture1==0) {
 if ((space->MonsterGroupeYpos<(2+(4-(space->MonsterFloorMax+1))))/*&&(LEVELS<=MAXLEVELSHIELDED)*/) {}else{
 if (ShieldRemoved!=1) {
-   space->Shield[0]=0x00;
-   space->Shield[1]=0x00;
-   space->Shield[2]=0x00;
-   space->Shield[3]=0x00;
-   space->Shield[4]=0x00;
-   space->Shield[5]=0x00;
+  // memset saves 66 bytes???
+  memset( &space->Shield[0], sizeof( space->Shield ), 0x00 ); // sbr
+   //space->Shield[0]=0x00;
+   //space->Shield[1]=0x00;
+   //space->Shield[2]=0x00;
+   //space->Shield[3]=0x00;
+   //space->Shield[4]=0x00;
+   //space->Shield[5]=0x00;
   ShieldRemoved=1;}}}}
 
 uint8_t UFOWrite(uint8_t x,uint8_t y,SPACE *space){
@@ -300,7 +329,7 @@ if (space->MonsterGrid[y][x]>=8) {space->MonsterGrid[y][x]=space->MonsterGrid[y]
 uint8_t background(uint8_t x,uint8_t y,SPACE *space){
 uint8_t scr=(space->ScrBackV+x);
 if ((scr)>127) {scr=(space->ScrBackV+x)-128;}
-return 0xff-pgm_read_byte(&back[((y)*128)+((scr))]);
+  return 0xff-chunkBuffer[scr]; // sbr
 }
  
 uint8_t Vesso(uint8_t x,uint8_t y,SPACE *space){
@@ -315,7 +344,8 @@ if ((space->MyShootBallxpos>=space->UFOxPos)&&(space->MyShootBallxpos<=(space->U
 for (x=1;x<100;x++){
 Sound(x,1);
 }
-if (Live<3) Live++;
+if (Live<3) { Live++; addScore( 50 ); } // sbr
+else{ addScore( 150 ); }                // sbr
 space->UFOxPos=-120;}
 }
 }
@@ -347,11 +377,16 @@ if (Varx<0) {Varx=0;}
 if (Vary<0) {Vary=0;}
 if (Varx>5) {goto End;}
 if (Vary>3) {goto End;}
-if ((space->MonsterGrid[Vary][Varx]>-1) && (space->MonsterGrid[Vary][Varx]<6)) {
-Sound(50,10);
-space->MonsterGrid[Vary][Varx]=8;
-space->MyShootBall=-1;
-SpeedControle(space);
+uint8_t monster = space->MonsterGrid[Vary][Varx]; // sbr
+if ((monster>-1) && (monster<6)) {                // sbr
+  // gotcha!
+  Sound(50,10);
+  if ( monster < 2 ) { addScore( 10 ); }  // sbr
+  if ( monster < 4 ) { addScore( 10 ); }  // sbr
+  addScore( 10 );                         // sbr
+  space->MonsterGrid[Vary][Varx]=8;
+  space->MyShootBall=-1;
+  SpeedControle(space);
 }
 //fin monster zone
 }
