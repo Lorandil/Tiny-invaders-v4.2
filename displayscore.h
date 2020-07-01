@@ -1,38 +1,47 @@
 #ifndef _DISPLAYSCORE_H_
 #define _DISPLAYSCORE_H_
 
+typedef uint16_t SCORE_TYPE;
+
 typedef struct {
-  uint32_t score;
+  SCORE_TYPE score;
   char     name[3];
-  uint8_t  crc;
+  uint8_t  crcFix;
 } HISCORE;
 
-static HISCORE _hiScore;
+// declare 'volatile' otherwise the performance might decrease dramatically
+// when using 'uint32_t' (perhaps because the compiler blocks too many registers
+// with the score).
+volatile static HISCORE _hiScore;
 
 // a single line of text
 static uint8_t textBuffer[32];
-static uint32_t score;
+static SCORE_TYPE score;
 
 void resetScore();
-void addScore( uint32_t points );
-void setScore( uint32_t points );
-uint16_t getScore();
-void setHighScorePoints( uint32_t points );
-void updateHighScorePoints();
-uint16_t getHighScorePoints();
+void addScore( SCORE_TYPE points );
+void setScore( SCORE_TYPE points );
+SCORE_TYPE getScore();
+void setHighScorePoints( SCORE_TYPE points );
+bool updateHighScorePoints();
+SCORE_TYPE getHighScorePoints();
 uint8_t calcHighScoreCRC();
 
 // EEPROM functions
 void initHighScoreStruct( uint16_t gameAddr );
-void recoverHighScoreFromEEPROM( uint16_t gameAddr );
+void readHighScoreFromEEPROM( uint16_t gameAddr );
 void storeHighScoreToEEPROM( uint16_t gameAddr );
 
-void convertValueToDigits( uint32_t value, uint8_t *digits );
+void convertValueToDigits( SCORE_TYPE value, uint8_t *digits );
 
 // display functions (and helpers)
 uint8_t displayText( uint8_t x,uint8_t y );
+uint8_t displayZoomedText( uint8_t x, uint8_t y, uint8_t startLineY );
 void clearText();
 void printText( uint8_t x, uint8_t *text, uint8_t textLength );
+void printByteHex( uint8_t x, uint8_t value );
+void hexdumpEEPROM( uint8_t x, uint16_t addr, uint16_t byteCount );
 uint8_t *getTextBuffer();
 
+void SerialPrintHighScoreStruct();
 #endif

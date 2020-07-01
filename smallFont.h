@@ -1,7 +1,7 @@
 #ifndef _SMALLFONT_H_
 #define _SMALLFONT_H_
 
-// a small 3x5 number font
+// a small 3x5 number font - ok, it's 4x8 ;)
 const uint8_t  numberFont3x5[] PROGMEM = {
   // 0
   0b00011110,
