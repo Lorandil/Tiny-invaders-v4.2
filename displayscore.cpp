@@ -260,7 +260,7 @@ uint8_t displayText( uint8_t x, uint8_t y )
     // is it a valid character?
     if ( value != 0 )
     {
-      // return the column value
+      // get the column value
       return( pgm_read_byte( charachterFont3x5 + ( ( value - '0' ) << 2 ) + ( x & 0x03) ) );
     }
   }
@@ -268,50 +268,72 @@ uint8_t displayText( uint8_t x, uint8_t y )
 }
 
 /*--------------------------------------------------------------*/
-// Displays a zoomed line of ascii character from the smallFont in 
-// starting in the given 8 pixel line.
+// Display zoomed ascii character from the smallFont in three
+// lines of 16 characters centered vertically. 
+// The zoom factor is fixed to '2'.
+// If bit 7 is set, the character will be displayed inverted.
 // To save flash memory, the font ranges only from '0' to 'Z'.
-// The zoom factor is fixed to '2'
-uint8_t displayZoomedText( uint8_t x, uint8_t y, uint8_t startLineY )
+// Technical detail: The font is moved 1 pixel down to get a better
+// reverse display.
+uint8_t displayZoomedText( uint8_t x, uint8_t y )
 {
-  // 'y' is unsigned, isnt't it?
-  y -= startLineY;
-  // so if it's less or equal '1', it's a match!
-  if ( y <= 1 )
+  // display should have a center line
+  y -= 1;
+  // Nice trick: 'y' is unsigend, so if 'y' was '0',
+  // then 'y - 1' will be '255' and thus greater than 6!
+  if ( y < 6 )
   {
     // Find appropriate character in text array:
     // Font width is 4 px, zoom is 2x, so fetch a new character every 8 pixels
-    uint8_t value = textBuffer[x >> 3];
+    uint8_t value = textBuffer[((y >> 1) << 4) + ( x >> 3)];
     // is it a valid character?
     if ( value != 0 )
     {
-      // return the column value
-      value = ( pgm_read_byte( charachterFont3x5 + ( ( value - '0' ) << 2 ) + ( ( x >> 1 ) & 0x03 ) ) );
-      if ( y == 0 )
+      // MSB set? -> inverse video
+      uint8_t reverse = value & 0x80;
+      // remove MSB from value
+      value -= reverse;
+      // return the column value (move the font 1 pixel down)
+      value = ( pgm_read_byte( charachterFont3x5 + ( ( value - '0' ) << 2 ) + ( ( x >> 1 ) & 0x03 ) ) ) << 1;
+      if ( ( y & 0x01 ) == 0 )
       {
         // upper line
-        return( pgm_read_byte( nibbleZoom + ( value & 0x0f ) ) );
+        value = ( pgm_read_byte( nibbleZoom + ( value & 0x0f ) ) );
       }
       else
       {
         // lower line
-        return( pgm_read_byte( nibbleZoom + ( value >> 4 ) ) );
+        value = ( pgm_read_byte( nibbleZoom + ( value >> 4 ) ) );
       }
+      // invert?
+      if ( reverse )
+      {
+        // invert pixels
+        value = value ^ 0xff;
+      }
+      return( value );
     }
   }
+  // Please move along, there is nothing to be seen here...
   return( 0x00 );
 }
 
 /*--------------------------------------------------------------*/
 void clearText()
 {
-  memset( textBuffer, 0x00, 32 );
+  memset( textBuffer, 0x00, sizeof( textBuffer ) );
 }
 
 /*--------------------------------------------------------------*/
 void printText( uint8_t x, uint8_t *text, uint8_t textLength )
 {
   memcpy( textBuffer + x, text, textLength );
+}
+
+/*--------------------------------------------------------------*/
+void pgm_printText( uint8_t x, uint8_t *text, uint8_t textLength )
+{
+  memcpy_P( textBuffer + x, text, textLength );
 }
 
 /*--------------------------------------------------------------*/
