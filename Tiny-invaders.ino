@@ -92,7 +92,7 @@ void loop() {
   uint8_t Decompte=0;
   uint8_t VarPot;
   uint8_t MyShootReady=SHOOTS;
-  input = 0;  // sbr
+  //input = 0;  // sbr
   newHighScore = false; // sbr
 SPACE space;
 NEWGAME:;
@@ -103,11 +103,57 @@ if ( newHighScore ) // sbr <start>
 {
   pgm_printText( 0 * 16 + 3, txtNewHiScore, sizeof( txtNewHiScore ) );
   pgm_printText( 1 * 16 + 0, txtEnterName, sizeof( txtEnterName ) );
-  printText( 2 * 16 + 7, getHighScoreName(), 3 );
-  Tiny_Flip( BLANK_BACKGROUND,&space);
+
+  // get pointer to the text buffer
+  uint8_t *pInitials = getHighScoreName();
+  uint8_t *pInitialsEnd = pInitials + 3;
+  uint8_t *pTextBuffer = getTextBuffer() + 2 * 16 + 7;
+
+  while ( pInitials < pInitialsEnd )
+  {
+    // print name
+    printText( 2 * 16 + 7, getHighScoreName(), 3 );
+    // wait for 'fire'
+    do
+    {
+      // get current letter
+      uint8_t letter = *pInitials;
+
+      // read the analog input once
+      uint16_t input = analogRead( A0 );
+      // right?
+      if ( (input>500)&&(input<750) ) 
+      {
+        letter++;
+        if ( letter > 'Z' ) { letter = '0'; }
+        _delay_ms( 100 );
+      }
+      // left?
+      if ( (input>=750)&&(input<950) )
+      {
+        letter--;
+        if ( letter < '0' ) { letter = 'Z'; }
+        _delay_ms( 100 );
+      }
+      // save changed letter to high score structure
+      *pInitials = letter;
+      // highlight the current letter on screen
+      *pTextBuffer = letter | 0x80;
+      // display letter
+      Tiny_Flip( BLANK_BACKGROUND,&space);
+    }
+    while ( digitalRead(1) );
+    // wait for 'fire' released
+    while ( !digitalRead(1) );
+    // next letter
+    pInitials++;
+    pTextBuffer++;
+    
+  }
+
+  // store the new highscore with the entered name 
   storeHighScoreToEEPROM( TINY_INVADERS_EEPROM_ADDR );
   newHighScore = false;
-  _delay_ms(2000);
 }
 else
 {
@@ -168,18 +214,16 @@ if (VarPot<(ShipPos-2)) {ShipPos=ShipPos-((ShipPos-VarPot)/3);}
 if (ShipDead!=1) {
 if (space.frame<space.frameMax) {space.frame++;}else{GRIDMonsterFloorY(&space);space.anim=!space.anim;if (space.anim==0){Sound(100,1);}else{Sound(200,1);}MonsterRefreshMove(&space);space.frame=0;}
 //VarPot=map(analogRead(A3),0,1023,0,114);
-// no user action yet
-input = 0;  // sbr
-if ((analogRead(A0)>=750)&&(analogRead(A0)<950)) {
-  input = BUTTON_LEFT;  // sbr
-  if (VarPot>5) { VarPot=VarPot-6; }
-}
-if ((analogRead(A0)>500)&&(analogRead(A0)<750)) {
-  input = BUTTON_RIGHT;  // sbr
+// just read the input once
+uint16_t input = analogRead( A0 ); // sbr
+if ((input>500)&&(input<750)) {
   if (VarPot<108) { VarPot=VarPot+6; }
 }
+if ((input>=750)&&(input<950)) {
+  if (VarPot>5) { VarPot=VarPot-6; }
+}
 // check for fire button
-if ( !digitalRead(1) ) { input |= BUTTON_FIRE; }  // sbr
+//if ( !digitalRead(1) ) { input |= BUTTON_FIRE; }  // sbr
 if ((digitalRead(1)==0)&&(MyShootReady==SHOOTS)) {Sound(200,4);MyShootReady=0;space.MyShootBall=6;space.MyShootBallxpos=ShipPos+6;}
 }else{
 Sound(80,1);Sound(100,1); 
