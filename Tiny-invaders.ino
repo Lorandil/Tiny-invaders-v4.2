@@ -33,24 +33,15 @@ const uint8_t STARS_BACKGROUND = 0; // sbr
 const uint8_t INTRO_BACKGROUND = 1; // sbr
 const uint8_t BLANK_BACKGROUND = 2; // sbr
 
-// direction names
-const uint8_t BUTTON_UP    = 0x01;  // sbr
-const uint8_t BUTTON_DOWN  = 0x02;  // sbr
-const uint8_t BUTTON_LEFT  = 0x04;  // sbr
-const uint8_t BUTTON_RIGHT = 0x08;  // sbr
-const uint8_t BUTTON_FIRE  = 0x10;  // sbr
-
 // special charset: '0'-'9',':!<->?*','A'-'Z'
 // ';' means '!', '=' means '-' and '@' means '*'
 // The strange text definitions as arrays of chars are 
 // - to save the terminating zero a string definition would cause ;)
 // - to change <space> to 0x00
 const unsigned char PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
-//const unsigned char PROGMEM txtHiScore[] = "HISCORE"; // sbr
 const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E',';'}; // sbr
 const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E',':'}; // sbr
 const unsigned char PROGMEM txtGameOver[] = {'G','A','M','E',0,'O','V','E','R',';'}; // sbr
-//const unsigned char PROGMEM txtInsertCoin = "INSERT COIN"; // sbr
 
 // EEPROM storage address for highscore and name
 const uint16_t TINY_INVADERS_EEPROM_ADDR = 128; // sbr
@@ -65,10 +56,9 @@ uint8_t ShipDead=0;
 uint8_t ShipPos/*=56*/; // sbr (initialization not necessary, saves 2 bytes)
 // display line sized buffer for on-the-fly RLE decompression
 uint8_t chunkBuffer[128]; // sbr
-// catch user input
-uint8_t input;  // sbr
 // no new highscore yet
 bool newHighScore;  // sbr
+bool firstRun = true; // sbr
 // fin var public
 
 void setup() {
@@ -105,11 +95,11 @@ if ( newHighScore ) // sbr <start>
   pgm_printText( 1 * 16 + 0, txtEnterName, sizeof( txtEnterName ) );
 
   // get pointer to the text buffer
-  uint8_t *pInitials = getHighScoreName();
-  uint8_t *pInitialsEnd = pInitials + 3;
-  uint8_t *pTextBuffer = getTextBuffer() + 2 * 16 + 7;
+  uint8_t *initials = getHighScoreName();
+  uint8_t *initialsEnd = initials + 3;
+  uint8_t *textBuffer = getTextBuffer() + 2 * 16 + 7;
 
-  while ( pInitials < pInitialsEnd )
+  while ( initials < initialsEnd )
   {
     // print name
     printText( 2 * 16 + 7, getHighScoreName(), 3 );
@@ -117,55 +107,61 @@ if ( newHighScore ) // sbr <start>
     do
     {
       // get current letter
-      uint8_t letter = *pInitials;
+      uint8_t letter = *initials;
 
       // read the analog input once
       uint16_t input = analogRead( A0 );
+      bool userAction = false;
       // right?
       if ( (input>500)&&(input<750) ) 
       {
         letter++;
         if ( letter > 'Z' ) { letter = '0'; }
-        _delay_ms( 100 );
+        userAction = true;
       }
       // left?
       if ( (input>=750)&&(input<950) )
       {
         letter--;
         if ( letter < '0' ) { letter = 'Z'; }
-        _delay_ms( 100 );
+        userAction = true;
+      }
+      // user action?
+      if ( userAction )
+      {
+        Sound(100,125); Sound(50,125);
       }
       // save changed letter to high score structure
-      *pInitials = letter;
+      *initials = letter;
       // highlight the current letter on screen
-      *pTextBuffer = letter | 0x80;
+      *textBuffer = letter | 0x80;
       // display letter
       Tiny_Flip( BLANK_BACKGROUND,&space);
     }
     while ( digitalRead(1) );
+    // ok, got it!
+    Sound(100,125); Sound(50,125);
     // wait for 'fire' released
     while ( !digitalRead(1) );
     // next letter
-    pInitials++;
-    pTextBuffer++;
-    
+    initials++;
+    textBuffer++;
   }
 
   // store the new highscore with the entered name 
   storeHighScoreToEEPROM( TINY_INVADERS_EEPROM_ADDR );
   newHighScore = false;
 }
-else
+else if ( !firstRun )
 {
   pgm_printText( 1 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
   Tiny_Flip( BLANK_BACKGROUND,&space);
-  storeHighScoreToEEPROM( TINY_INVADERS_EEPROM_ADDR );
-  newHighScore = false;
   _delay_ms(2000);
 } // sbr <end>
+firstRun = false; // sbr
+resetScore(); // sbr
 Live=3;
 LEVELS=0;
-resetScore(); // sbr
 // clear text buffer
 clearText();  // sbr
 // score in the top left corner
