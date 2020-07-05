@@ -55,7 +55,8 @@ const uint8_t  numberFont3x5[] PROGMEM = {
   0b00000000,
 };
 
-// a small 3x5 charachter font
+// Small 3x5 charachter font
+// Modified ASCII-like code page: '0'-'9',':!<->?*','A'-'Z'
 const uint8_t  charachterFont3x5[] PROGMEM = {
   // 0
   0b00011110,
@@ -112,9 +113,9 @@ const uint8_t  charachterFont3x5[] PROGMEM = {
   0b00001010,
   0b00000000,
   0b00000000,
-  // ;
-  0b00010000,
-  0b00001010,
+  // ! instead of ';'
+  0b00000000,
+  0b00010111,
   0b00000000,
   0b00000000,
   // <
@@ -122,10 +123,10 @@ const uint8_t  charachterFont3x5[] PROGMEM = {
   0b00001010,
   0b00010001,
   0b00000000,
-  // =
-  0b00001010,
-  0b00001010,
-  0b00001010,
+  // - instead of '='
+  0b00000100,
+  0b00000100,
+  0b00000100,
   0b00000000,
   // >
   0b00010001,
@@ -137,10 +138,10 @@ const uint8_t  charachterFont3x5[] PROGMEM = {
   0b00010101,
   0b00000111,
   0b00000000,
-  // @
+  // * instead of '@'
+  0b00010101,
   0b00001110,
   0b00010101,
-  0b00011011,
   0b00000000,
   // A
   0b00011110,
