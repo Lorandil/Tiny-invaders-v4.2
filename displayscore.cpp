@@ -4,7 +4,7 @@
 #include "smallfont.h"
 #include <EEPROM.h>
 
-const uint8_t HISCORE_MAGIC = 0x42;
+const uint8_t HISCORE_MAGIC = 42;
 
 //#define _DEBUG
 #ifdef _DEBUG
@@ -84,6 +84,14 @@ uint8_t calcHighScoreCRC()
 }
 
 /*--------------------------------------------------------------*/
+// Attention: The returned string has a fixed size of 3 bytes 
+// and is *not* terminated with zero!
+uint8_t *getHighScoreName()
+{
+  return( _hiScore.name );
+}
+
+/*--------------------------------------------------------------*/
 void initHighScoreStruct( uint16_t gameAddr )
 {
   // read stored structure to _hiScore variable
@@ -95,8 +103,9 @@ void initHighScoreStruct( uint16_t gameAddr )
     Serial.println(F("Invalid HISCORE structure - default values generated") );
   #endif    
     // initialize with some default values
-    memset( &_hiScore, 0, sizeof( _hiScore ) );
     _hiScore.score = 0;
+    memset( _hiScore.name, '?', sizeof(_hiScore.name) );
+    _hiScore.crcFix = 0;
     // and store it (CRC is calculated while storing)
     storeHighScoreToEEPROM( gameAddr );
   }

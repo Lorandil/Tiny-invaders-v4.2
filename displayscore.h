@@ -28,6 +28,9 @@ void setHighScorePoints( SCORE_TYPE points );
 bool updateHighScorePoints();
 SCORE_TYPE getHighScorePoints();
 uint8_t calcHighScoreCRC();
+// Attention: The returned string has a fixed size of 3 bytes 
+// and is *not* terminated with zero!
+uint8_t *getHighScoreName();
 
 // EEPROM functions
 void initHighScoreStruct( uint16_t gameAddr );
