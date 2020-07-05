@@ -28,6 +28,25 @@
 
 #define MAXLEVELSHIELDED 3
 
+// there are three different background bitmaps
+const uint8_t STARS_BACKGROUND = 0; // sbr
+const uint8_t INTRO_BACKGROUND = 1; // sbr
+const uint8_t BLANK_BACKGROUND = 2; // sbr
+
+// direction names
+const uint8_t BUTTON_UP    = 0x01;  // sbr
+const uint8_t BUTTON_DOWN  = 0x02;  // sbr
+const uint8_t BUTTON_LEFT  = 0x04;  // sbr
+const uint8_t BUTTON_RIGHT = 0x08;  // sbr
+const uint8_t BUTTON_FIRE  = 0x10;  // sbr
+
+const unsigned char PROGMEM txtOneUp[] = "1UP"; // sbr
+const unsigned char PROGMEM txtHiScore[] = "HISCORE"; // sbr
+const unsigned char PROGMEM txtNewHiScore[] = "NEW HISCORE!"; // sbr
+const unsigned char PROGMEM txtEnterName[] = "ENTER NAME:"; // sbr
+const unsigned char PROGMEM txtGameOver[] = "GAME OVER!"; // sbr
+//const unsigned char PROGMEM txtInsertCoin = "INSERT COIN"; // sbr
+
 // EEPROM storage address for highscore and name
 const uint16_t TINY_INVADERS_EEPROM_ADDR = 128; // sbr
 
@@ -38,8 +57,13 @@ uint8_t MONSTERrest=0;
 uint8_t LEVELS=0;
 uint8_t SpeedShootMonster=0;
 uint8_t ShipDead=0;
-uint8_t ShipPos=56;
+uint8_t ShipPos/*=56*/; // sbr (initialization not necessary, saves 2 bytes)
+// display line sized buffer for on-the-fly RLE decompression
 uint8_t chunkBuffer[128]; // sbr
+// catch user input
+uint8_t input;  // sbr
+// no new highscore yet
+bool newHighScore;  // sbr
 // fin var public
 
 void setup() {
@@ -63,18 +87,32 @@ void loop() {
   uint8_t Decompte=0;
   uint8_t VarPot;
   uint8_t MyShootReady=SHOOTS;
+  input = 0;  // sbr
+  newHighScore = false; // sbr
 SPACE space;
 NEWGAME:;
-// store hiscore to EEPROM
-storeHighScoreToEEPROM( TINY_INVADERS_EEPROM_ADDR ); // sbr
+// store hiscore to EEPROM (if necessary)
+if ( newHighScore ) // sbr <start>
+{
+  clearText();
+  pgm_printText( 1 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
+  Tiny_Flip( BLANK_BACKGROUND,&space);
+  storeHighScoreToEEPROM( TINY_INVADERS_EEPROM_ADDR );
+  newHighScore = false;
+  _delay_ms(2000);
+} // sbr <end>
 Live=3;
 LEVELS=0;
 resetScore(); // sbr
+// clear text buffer
 clearText();  // sbr
-printText( 0, "1UP", 3 ); // sbr
-printText( 18, "HISCORE",7 ); // sbr
+// score in the top left corner
+pgm_printText( 0, txtOneUp, sizeof( txtOneUp ) ); // sbr
+// high score in the top right corner
+pgm_printText( 18, txtHiScore,sizeof( txtHiScore ) ); // sbr
+
 while(1){
-Tiny_Flip(1,&space);
+Tiny_Flip( INTRO_BACKGROUND,&space);  // sbr
 if (digitalRead(1)==0) {Sound(100,125);Sound(50,125);goto BYPASS2;}
 }
 NEWLEVEL:
@@ -91,7 +129,7 @@ if (Live>0) {Live--;}else{goto NEWGAME;}
 Bypass:
 ShipDead=0;
 Decompte=0;
-Tiny_Flip(0,&space);
+Tiny_Flip( STARS_BACKGROUND,&space); // sbr
 _delay_ms(1000);
 while(1){
 if (MONSTERrest==0) { 
@@ -102,7 +140,7 @@ goto NEWLEVEL;}
 if ((((space.MonsterGroupeYpos)+(space.MonsterFloorMax+1))==7)&&(Decompte==0)) {ShipDead=1;}
 if (SpeedShootMonster<=((9-LEVELS))) {SpeedShootMonster++;}else{SpeedShootMonster=0;MonsterShootGenerate(&space);}
  space.ScrBackV= (ShipPos/14)+52;
-Tiny_Flip(0,&space);
+Tiny_Flip(STARS_BACKGROUND,&space); // sbr
 space.oneFrame=!space.oneFrame;
 RemoveExplodOnMonsterGrid(&space);
 MonsterShootupdate(&space);
@@ -113,15 +151,27 @@ if (VarPot<(ShipPos-2)) {ShipPos=ShipPos-((ShipPos-VarPot)/3);}
 if (ShipDead!=1) {
 if (space.frame<space.frameMax) {space.frame++;}else{GRIDMonsterFloorY(&space);space.anim=!space.anim;if (space.anim==0){Sound(100,1);}else{Sound(200,1);}MonsterRefreshMove(&space);space.frame=0;}
 //VarPot=map(analogRead(A3),0,1023,0,114);
-if ((analogRead(A0)>=750)&&(analogRead(A0)<950)) {if (VarPot>5) {VarPot=VarPot-6;}}
-if ((analogRead(A0)>500)&&(analogRead(A0)<750)) {if (VarPot<108) {VarPot=VarPot+6;}}
+// no user action yet
+input = 0;  // sbr
+if ((analogRead(A0)>=750)&&(analogRead(A0)<950)) {
+  input = BUTTON_LEFT;  // sbr
+  if (VarPot>5) { VarPot=VarPot-6; }
+}
+if ((analogRead(A0)>500)&&(analogRead(A0)<750)) {
+  input = BUTTON_RIGHT;  // sbr
+  if (VarPot<108) { VarPot=VarPot+6; }
+}
+// check for fire button
+if ( !digitalRead(1) ) { input |= BUTTON_FIRE; }  // sbr
 if ((digitalRead(1)==0)&&(MyShootReady==SHOOTS)) {Sound(200,4);MyShootReady=0;space.MyShootBall=6;space.MyShootBallxpos=ShipPos+6;}
 }else{
 Sound(80,1);Sound(100,1); 
 Decompte++;
 if (Decompte>=30) {_delay_ms(600);if (((space.MonsterGroupeYpos)+(space.MonsterFloorMax+1))==7) {goto NEWGAME;}else{goto RestartLevel;}}}
 if (space.MyShootBall==-1) {if (MyShootReady<SHOOTS) {MyShootReady++;}
-}}}
+}
+}
+}
 ////////////////////////////////// main end /////////////////////////////////
 
 void SpeedControle(SPACE *space){
@@ -151,12 +201,25 @@ return 0x00;}
 void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
 uint8_t y,x; 
 uint8_t MYSHIELD=0x00;
-// select bitmap
-uint8_t *render = ( render0_picture1 == 1 ? intro_compressed : back_compressed ); // sbr
+
+// select the appropriate bitmap
+uint8_t *render;  // sbr <start>
+switch( render0_picture1 )
+{
+case INTRO_BACKGROUND:
+  render = intro_compressed; break;
+case STARS_BACKGROUND:
+  render = back_compressed; break;
+default:
+  render = blank_compressed;
+}; // sbr <end>
+
 // we want an arcade style live highscore display
-updateHighScorePoints();        // sbr
-convertValueToDigits( getScore(), getTextBuffer() + 4 ); // sbr
-convertValueToDigits( getHighScorePoints(), getTextBuffer() + 26 ); // sbr
+newHighScore |= updateHighScorePoints();  // sbr
+if ( render0_picture1 == STARS_BACKGROUND ) // sbr
+{ convertValueToDigits( getScore(), getTextBuffer() + 4 ); // sbr
+  convertValueToDigits( getHighScorePoints(), getTextBuffer() + 26 ); // sbr
+} // sbr
 for (y = 0; y < 8; y++)
 {
   // uncompress chunk and save next address
@@ -169,13 +232,18 @@ for (y = 0; y < 8; y++)
   
   for (x = 0; x < 128; x++)
   {
+    uint8_t pixels; // sbr
+    //uint8_t txtPixels = displayZoomedText(x,y); // sbr
+    uint8_t txtPixels = displayText(x,y); // sbr
+    
     if (render0_picture1==0) {
       if (ShieldRemoved==0) {MYSHIELD=MyShield(x,y,space);}else{MYSHIELD=0x00;}
-      SSD1306.ssd1306_send_byte(background(x,y,space)|LivePrint(x,y)|Vesso(x,y,space)|UFOWrite(x,y,space)|Monster(x,y,space)|MyShoot(x,y,space)|MonsterShoot(x,y,space)|displayText(x,y)|MYSHIELD); // sbr
+      pixels = (background(x,y,space)|LivePrint(x,y)|Vesso(x,y,space)|UFOWrite(x,y,space)|Monster(x,y,space)|MyShoot(x,y,space)|MonsterShoot(x,y,space)|txtPixels|MYSHIELD); // sbr
     }
     else{
-      SSD1306.ssd1306_send_byte(chunkBuffer[x]);  // sbr
+      pixels = chunkBuffer[x];
     }
+    SSD1306.ssd1306_send_byte( pixels ); // sbr
   }
   if (render0_picture1==0) {
     if (ShieldRemoved==0) {ShieldDestroy(0,space->MyShootBallxpos,space->MyShootBall,space);}
@@ -184,14 +252,14 @@ for (y = 0; y < 8; y++)
 if (render0_picture1==0) {
 if ((space->MonsterGroupeYpos<(2+(4-(space->MonsterFloorMax+1))))/*&&(LEVELS<=MAXLEVELSHIELDED)*/) {}else{
 if (ShieldRemoved!=1) {
-  // memset saves 66 bytes???
-  memset( &space->Shield[0], sizeof( space->Shield ), 0x00 ); // sbr
-   //space->Shield[0]=0x00;
-   //space->Shield[1]=0x00;
-   //space->Shield[2]=0x00;
-   //space->Shield[3]=0x00;
-   //space->Shield[4]=0x00;
-   //space->Shield[5]=0x00;
+  // memset saves some bytes
+  memset( &space->Shield[0], 0x00, sizeof( space->Shield ) ); // sbr
+  //space->Shield[0]=0x00;
+  //space->Shield[1]=0x00;
+  //space->Shield[2]=0x00;
+  //space->Shield[3]=0x00;
+  //space->Shield[4]=0x00;
+  //space->Shield[5]=0x00;
   ShieldRemoved=1;}}}}
 
 uint8_t UFOWrite(uint8_t x,uint8_t y,SPACE *space){
@@ -261,6 +329,9 @@ return 0;
 
   
 void ShieldDestroyWrite(uint8_t BOOLWRITE,uint8_t line,SPACE *space,uint8_t Origine){
+  space->Shield[BOOLWRITE] &= ~( 0b10000000 >> line ); // sbr
+  if (Origine==0) {space->MyShootBall=-1;} // sbr
+/*
 switch (line){
   case 0:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-128;if (Origine==0) {space->MyShootBall=-1;}break;
   case 1:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-64;if (Origine==0) {space->MyShootBall=-1;}break;
@@ -271,30 +342,36 @@ switch (line){
   case 6:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-2;if (Origine==0) {space->MyShootBall=-1;}break;
   case 7:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-1;if (Origine==0) {space->MyShootBall=-1;}break;
 default:break;
-}}
+}
+*/
+}
 
-
+// reworked the code to free some flash memoryd
 uint8_t MyShield(uint8_t x,uint8_t y,SPACE *space){
-#define OFFSETXSHIELD -1
-if (((x>=(20+OFFSETXSHIELD))&&(x<=(27+OFFSETXSHIELD)))&&(y==6)) {
-if ((BOOLREAD(0,(x-(20+OFFSETXSHIELD)),space))) {return ShieldBlitz(0,(x-(20+OFFSETXSHIELD)));}else{return 0x00;}
-}
-if (((x>=(28+OFFSETXSHIELD))&&(x<=(35+OFFSETXSHIELD)))&&(y==6)) {
-if ((BOOLREAD(1,(x-(28+OFFSETXSHIELD)),space))) {return ShieldBlitz(1,(x-(28+OFFSETXSHIELD)));}else{return 0x00;}
-}
-if (((x>=(55+OFFSETXSHIELD))&&(x<=(62+OFFSETXSHIELD)))&&(y==6)) {
-if ((BOOLREAD(2,(x-(55+OFFSETXSHIELD)),space))) {return ShieldBlitz(0,(x-(55+OFFSETXSHIELD)));}else{return 0x00;}
-}
-if (((x>=(63+OFFSETXSHIELD))&&(x<=(70+OFFSETXSHIELD)))&&(y==6)) {
-if ((BOOLREAD(3,(x-(63+OFFSETXSHIELD)),space))) {return ShieldBlitz(1,(x-(63+OFFSETXSHIELD)));}else{return 0x00;}
-}
-if (((x>=(90+OFFSETXSHIELD))&&(x<=(97+OFFSETXSHIELD)))&&(y==6)) {
-if ((BOOLREAD(4,(x-(90+OFFSETXSHIELD)),space))) {return ShieldBlitz(0,(x-(90+OFFSETXSHIELD)));}else{return 0x00;}
-}
-if (((x>=(98+OFFSETXSHIELD))&&(x<=(105+OFFSETXSHIELD)))&&(y==6)) {
-if ((BOOLREAD(5,(x-(98+OFFSETXSHIELD)),space))) {return ShieldBlitz(1,(x-(98+OFFSETXSHIELD)));}else{return 0x00;}
-}
-return 0x00;
+  #define OFFSETXSHIELD -1
+  // only check in the line before the last
+  if ( y == 6 )
+  {
+    // same trick again: x is unsigned... let's take advantage of that!
+    x -= (20+OFFSETXSHIELD);
+
+    // there are three shield
+    for ( uint8_t n = 0; n < 6; n += 2 )
+    {
+      if ( x <= 7 ) {
+        if ((BOOLREAD(n,x,space))) {return ShieldBlitz(0,x);}else{return 0x00;}
+      }
+      
+      x -= 8;
+      if ( x <= 7 ) {
+        if ((BOOLREAD(n + 1,x,space))) {return ShieldBlitz(1,x);}else{return 0x00;}
+      }
+  
+      // next shield position
+      x -= 27;
+    }
+  }
+  return 0x00;
 }
 
 uint8_t ShieldBlitz(uint8_t Part,uint8_t LineSH ){
@@ -313,7 +390,7 @@ switch (LineSH){
 return Var0;
 }
 
-uint8_t BOOLREAD(uint8_t SHnum,uint8_t LineSH,SPACE *space ){
+inline uint8_t BOOLREAD(uint8_t SHnum,uint8_t LineSH,SPACE *space ){
 uint8_t Var0=(0b10000000>>LineSH);
 if ((space->Shield[SHnum]&Var0)!=0) {return 1;}else{return 0;}
 }
@@ -480,6 +557,7 @@ ShieldRemoved=0;
 SpeedShootMonster=0;
 MONSTERrest=24;
 LoadMonstersLevels(LEVELS,space);
+
 space->Shield[0]=255;  
 space->Shield[1]=255;  
 space->Shield[2]=255;  
