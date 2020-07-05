@@ -40,11 +40,16 @@ const uint8_t BUTTON_LEFT  = 0x04;  // sbr
 const uint8_t BUTTON_RIGHT = 0x08;  // sbr
 const uint8_t BUTTON_FIRE  = 0x10;  // sbr
 
-const unsigned char PROGMEM txtOneUp[] = "1UP"; // sbr
-const unsigned char PROGMEM txtHiScore[] = "HISCORE"; // sbr
-const unsigned char PROGMEM txtNewHiScore[] = "NEW HISCORE!"; // sbr
-const unsigned char PROGMEM txtEnterName[] = "ENTER NAME:"; // sbr
-const unsigned char PROGMEM txtGameOver[] = "GAME OVER!"; // sbr
+// special charset: '0'-'9',':!<->?*','A'-'Z'
+// ';' means '!', '=' means '-' and '@' means '*'
+// The strange text definitions as arrays of chars are 
+// - to save the terminating zero a string definition would cause ;)
+// - to change <space> to 0x00
+const unsigned char PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
+//const unsigned char PROGMEM txtHiScore[] = "HISCORE"; // sbr
+const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E',';'}; // sbr
+const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E',':'}; // sbr
+const unsigned char PROGMEM txtGameOver[] = {'G','A','M','E',0,'O','V','E','R',';'}; // sbr
 //const unsigned char PROGMEM txtInsertCoin = "INSERT COIN"; // sbr
 
 // EEPROM storage address for highscore and name
@@ -91,10 +96,21 @@ void loop() {
   newHighScore = false; // sbr
 SPACE space;
 NEWGAME:;
+// remove text
+clearText();  // sbr
 // store hiscore to EEPROM (if necessary)
 if ( newHighScore ) // sbr <start>
 {
-  clearText();
+  pgm_printText( 0 * 16 + 3, txtNewHiScore, sizeof( txtNewHiScore ) );
+  pgm_printText( 1 * 16 + 0, txtEnterName, sizeof( txtEnterName ) );
+  printText( 2 * 16 + 7, getHighScoreName(), 3 );
+  Tiny_Flip( BLANK_BACKGROUND,&space);
+  storeHighScoreToEEPROM( TINY_INVADERS_EEPROM_ADDR );
+  newHighScore = false;
+  _delay_ms(2000);
+}
+else
+{
   pgm_printText( 1 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
   Tiny_Flip( BLANK_BACKGROUND,&space);
   storeHighScoreToEEPROM( TINY_INVADERS_EEPROM_ADDR );
@@ -109,7 +125,8 @@ clearText();  // sbr
 // score in the top left corner
 pgm_printText( 0, txtOneUp, sizeof( txtOneUp ) ); // sbr
 // high score in the top right corner
-pgm_printText( 18, txtHiScore,sizeof( txtHiScore ) ); // sbr
+//pgm_printText( 18, txtHiScore,sizeof( txtHiScore ) ); // sbr
+printText( 22, getHighScoreName(), 3 ); // sbr
 
 while(1){
 Tiny_Flip( INTRO_BACKGROUND,&space);  // sbr
@@ -217,7 +234,13 @@ default:
 // we want an arcade style live highscore display
 newHighScore |= updateHighScorePoints();  // sbr
 if ( render0_picture1 == STARS_BACKGROUND ) // sbr
-{ convertValueToDigits( getScore(), getTextBuffer() + 4 ); // sbr
+{ 
+  // if new high score, change name to '1UP'
+  if ( newHighScore )
+  {
+    pgm_printText( 22, txtOneUp, sizeof( txtOneUp ) );
+  }
+  convertValueToDigits( getScore(), getTextBuffer() + 4 ); // sbr
   convertValueToDigits( getHighScorePoints(), getTextBuffer() + 26 ); // sbr
 } // sbr
 for (y = 0; y < 8; y++)
@@ -236,12 +259,16 @@ for (y = 0; y < 8; y++)
     //uint8_t txtPixels = displayZoomedText(x,y); // sbr
     uint8_t txtPixels = displayText(x,y); // sbr
     
-    if (render0_picture1==0) {
+    if (render0_picture1 == STARS_BACKGROUND) {
       if (ShieldRemoved==0) {MYSHIELD=MyShield(x,y,space);}else{MYSHIELD=0x00;}
       pixels = (background(x,y,space)|LivePrint(x,y)|Vesso(x,y,space)|UFOWrite(x,y,space)|Monster(x,y,space)|MyShoot(x,y,space)|MonsterShoot(x,y,space)|txtPixels|MYSHIELD); // sbr
     }
     else{
       pixels = chunkBuffer[x];
+      if (render0_picture1 == BLANK_BACKGROUND)
+      {
+        pixels |= displayZoomedText(x,y);        
+      }
     }
     SSD1306.ssd1306_send_byte( pixels ); // sbr
   }
@@ -254,12 +281,6 @@ if ((space->MonsterGroupeYpos<(2+(4-(space->MonsterFloorMax+1))))/*&&(LEVELS<=MA
 if (ShieldRemoved!=1) {
   // memset saves some bytes
   memset( &space->Shield[0], 0x00, sizeof( space->Shield ) ); // sbr
-  //space->Shield[0]=0x00;
-  //space->Shield[1]=0x00;
-  //space->Shield[2]=0x00;
-  //space->Shield[3]=0x00;
-  //space->Shield[4]=0x00;
-  //space->Shield[5]=0x00;
   ShieldRemoved=1;}}}}
 
 uint8_t UFOWrite(uint8_t x,uint8_t y,SPACE *space){
@@ -302,51 +323,42 @@ if ((((space->MonsterShoot[1])/2)==y)&&(space->MonsterShoot[0]==x) ) {if (((spac
 return 0x00;
 }
 
+// reworked the code to free some flash memory
 uint8_t ShieldDestroy(uint8_t Origine,uint8_t VarX,uint8_t VarY,SPACE *space){
-#define OFFSETXSHIELD -1
-if (VarY==6) {
-if (((VarX>=(20+OFFSETXSHIELD))&&(VarX<=(27+OFFSETXSHIELD)))) {
-if ((BOOLREAD(0,(VarX-(20+OFFSETXSHIELD)),space))) {ShieldDestroyWrite(0,(VarX-(20+OFFSETXSHIELD)),space,Origine);return 1;}
-}
-if (((VarX>=(28+OFFSETXSHIELD))&&(VarX<=(35+OFFSETXSHIELD)))) {
-if ((BOOLREAD(1,(VarX-(28+OFFSETXSHIELD)),space))) {ShieldDestroyWrite(1,(VarX-(28+OFFSETXSHIELD)),space,Origine);return 1;}
-}
-if (((VarX>=(55+OFFSETXSHIELD))&&(VarX<=(62+OFFSETXSHIELD)))) {
-if ((BOOLREAD(2,(VarX-(55+OFFSETXSHIELD)),space))) {ShieldDestroyWrite(2,(VarX-(55+OFFSETXSHIELD)),space,Origine);return 1;}
-}
-if (((VarX>=(63+OFFSETXSHIELD))&&(VarX<=(70+OFFSETXSHIELD)))) {
-if ((BOOLREAD(3,(VarX-(63+OFFSETXSHIELD)),space))) {ShieldDestroyWrite(3,(VarX-(63+OFFSETXSHIELD)),space,Origine);return 1;}
-}
-if (((VarX>=(90+OFFSETXSHIELD))&&(VarX<=(97+OFFSETXSHIELD)))) {
-if ((BOOLREAD(4,(VarX-(90+OFFSETXSHIELD)),space))) {ShieldDestroyWrite(4,(VarX-(90+OFFSETXSHIELD)),space,Origine);return 1;}
-}
-if (((VarX>=(98+OFFSETXSHIELD))&&(VarX<=(105+OFFSETXSHIELD)))) {
-if ((BOOLREAD(5,(VarX-(98+OFFSETXSHIELD)),space))) {ShieldDestroyWrite(5,(VarX-(98+OFFSETXSHIELD)),space,Origine);return 1;}
-}
-}
-return 0;
+  #define OFFSETXSHIELD -1
+  if ( VarY==6 )
+  {
+    // same trick again: VarX is unsigned... let's take advantage of that!
+    VarX -= (20+OFFSETXSHIELD);
+
+    // there are three shields
+    for ( uint8_t n = 0; n < 6; n++ )
+    {
+      if ( VarX <= 7 ) {
+        if ((BOOLREAD(n,VarX,space))) {ShieldDestroyWrite(n,VarX,space,Origine);return 1;}
+      }
+      n++;
+      
+      VarX -= 8;
+      if ( VarX <= 7 ) {
+        if ((BOOLREAD(n,VarX,space))) {ShieldDestroyWrite(n,VarX,space,Origine);return 1;}
+      }
+  
+      // next shield position
+      VarX -= 27;
+    }
+  }
+  return 0;
 }
 
-  
+// reworked the code to free some flash memory
 void ShieldDestroyWrite(uint8_t BOOLWRITE,uint8_t line,SPACE *space,uint8_t Origine){
   space->Shield[BOOLWRITE] &= ~( 0b10000000 >> line ); // sbr
   if (Origine==0) {space->MyShootBall=-1;} // sbr
-/*
-switch (line){
-  case 0:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-128;if (Origine==0) {space->MyShootBall=-1;}break;
-  case 1:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-64;if (Origine==0) {space->MyShootBall=-1;}break;
-  case 2:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-32;if (Origine==0) {space->MyShootBall=-1;}break;
-  case 3:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-16;if (Origine==0) {space->MyShootBall=-1;}break;
-  case 4:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-8;if (Origine==0) {space->MyShootBall=-1;}break;
-  case 5:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-4;if (Origine==0) {space->MyShootBall=-1;}break;
-  case 6:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-2;if (Origine==0) {space->MyShootBall=-1;}break;
-  case 7:space->Shield[BOOLWRITE]=space->Shield[BOOLWRITE]-1;if (Origine==0) {space->MyShootBall=-1;}break;
-default:break;
-}
-*/
 }
 
-// reworked the code to free some flash memoryd
+
+// reworked the code to free some flash memory
 uint8_t MyShield(uint8_t x,uint8_t y,SPACE *space){
   #define OFFSETXSHIELD -1
   // only check in the line before the last
@@ -355,7 +367,7 @@ uint8_t MyShield(uint8_t x,uint8_t y,SPACE *space){
     // same trick again: x is unsigned... let's take advantage of that!
     x -= (20+OFFSETXSHIELD);
 
-    // there are three shield
+    // there are three shields
     for ( uint8_t n = 0; n < 6; n += 2 )
     {
       if ( x <= 7 ) {
