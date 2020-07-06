@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 #include "displayscore.h"
-#include "smallfont.h"
+#include "smallFont.h"
 #include <EEPROM.h>
 
 const uint8_t HISCORE_MAGIC = 42;
