@@ -29,13 +29,13 @@
 #define MAXLEVELSHIELDED 3
 
 // there are three different background bitmaps
-const uint8_t STARS_BACKGROUND = 0; // sbr
-const uint8_t INTRO_BACKGROUND = 1; // sbr
-const uint8_t BLANK_BACKGROUND = 2; // sbr
+const uint8_t GAME_SCREEN  = 0; // sbr
+const uint8_t INTRO_SCREEN = 1; // sbr
+const uint8_t BLANK_SCREEN = 2; // sbr
 
 // special charset: '0'-'9',':!<->?*','A'-'Z'
 // ';' means '!', '=' means '-' and '@' means '*'
-// The strange text definitions as arrays of chars are 
+// The strange text definitions as arrays of chars were done 
 // - to save the terminating zero a string definition would cause ;)
 // - to change <space> to 0x00
 const unsigned char PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
@@ -66,7 +66,7 @@ void setup() {
   pinMode(1,INPUT);
   DDRB =DDRB|0b00010000;
   pinMode(A0,INPUT); 
-  // restore hiscore from EEPROM
+  // restore highscore from EEPROM
   initHighScoreStruct( TINY_INVADERS_EEPROM_ADDR ); // sbr
 }
 
@@ -82,11 +82,10 @@ void loop() {
   uint8_t Decompte=0;
   uint8_t VarPot;
   uint8_t MyShootReady=SHOOTS;
-  //input = 0;  // sbr
   newHighScore = false; // sbr
 SPACE space;
 NEWGAME:;
-// remove text
+// remove all text from the buffer
 clearText();  // sbr
 // store hiscore to EEPROM (if necessary)
 if ( newHighScore ) // sbr <start>
@@ -94,15 +93,19 @@ if ( newHighScore ) // sbr <start>
   pgm_printText( 0 * 16 + 3, txtNewHiScore, sizeof( txtNewHiScore ) );
   pgm_printText( 1 * 16 + 0, txtEnterName, sizeof( txtEnterName ) );
 
-  // get pointer to the text buffer
+  // get pointer to the text buffer (3rd line, highscore position)
+  uint8_t *textBuffer = getTextBuffer() + 2 * 16 + 8;
+  convertValueToDigits( getHighScorePoints(), textBuffer );
+  // place cursor before the score
+  textBuffer -= 4;
+
   uint8_t *initials = getHighScoreName();
   uint8_t *initialsEnd = initials + 3;
-  uint8_t *textBuffer = getTextBuffer() + 2 * 16 + 7;
 
   while ( initials < initialsEnd )
   {
     // print name
-    printText( 2 * 16 + 7, getHighScoreName(), 3 );
+    printText( 2 * 16 + 4, getHighScoreName(), 3 );
     // wait for 'fire'
     do
     {
@@ -129,18 +132,18 @@ if ( newHighScore ) // sbr <start>
       // user action?
       if ( userAction )
       {
-        Sound(100,125); Sound(50,125);
+        bebeep();
       }
       // save changed letter to high score structure
       *initials = letter;
       // highlight the current letter on screen
       *textBuffer = letter | 0x80;
       // display letter
-      Tiny_Flip( BLANK_BACKGROUND,&space);
+      Tiny_Flip( BLANK_SCREEN,&space);
     }
     while ( digitalRead(1) );
     // ok, got it!
-    Sound(100,125); Sound(50,125);
+    bebeep();
     // wait for 'fire' released
     while ( !digitalRead(1) );
     // next letter
@@ -155,7 +158,7 @@ if ( newHighScore ) // sbr <start>
 else if ( !firstRun )
 {
   pgm_printText( 1 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
-  Tiny_Flip( BLANK_BACKGROUND,&space);
+  Tiny_Flip( BLANK_SCREEN,&space);
   _delay_ms(2000);
 } // sbr <end>
 firstRun = false; // sbr
@@ -171,8 +174,8 @@ pgm_printText( 0, txtOneUp, sizeof( txtOneUp ) ); // sbr
 printText( 22, getHighScoreName(), 3 ); // sbr
 
 while(1){
-Tiny_Flip( INTRO_BACKGROUND,&space);  // sbr
-if (digitalRead(1)==0) {Sound(100,125);Sound(50,125);goto BYPASS2;}
+Tiny_Flip( INTRO_SCREEN,&space);  // sbr
+if (digitalRead(1)==0) {bebeep();goto BYPASS2;} // sbr
 }
 NEWLEVEL:
 _delay_ms(1000);
@@ -188,7 +191,7 @@ if (Live>0) {Live--;}else{goto NEWGAME;}
 Bypass:
 ShipDead=0;
 Decompte=0;
-Tiny_Flip( STARS_BACKGROUND,&space); // sbr
+Tiny_Flip( GAME_SCREEN,&space); // sbr
 _delay_ms(1000);
 while(1){
 if (MONSTERrest==0) { 
@@ -199,7 +202,7 @@ goto NEWLEVEL;}
 if ((((space.MonsterGroupeYpos)+(space.MonsterFloorMax+1))==7)&&(Decompte==0)) {ShipDead=1;}
 if (SpeedShootMonster<=((9-LEVELS))) {SpeedShootMonster++;}else{SpeedShootMonster=0;MonsterShootGenerate(&space);}
  space.ScrBackV= (ShipPos/14)+52;
-Tiny_Flip(STARS_BACKGROUND,&space); // sbr
+Tiny_Flip(GAME_SCREEN,&space); // sbr
 space.oneFrame=!space.oneFrame;
 RemoveExplodOnMonsterGrid(&space);
 MonsterShootupdate(&space);
@@ -219,16 +222,13 @@ if ((input>=750)&&(input<950)) {
   if (VarPot>5) { VarPot=VarPot-6; }
 }
 // check for fire button
-//if ( !digitalRead(1) ) { input |= BUTTON_FIRE; }  // sbr
 if ((digitalRead(1)==0)&&(MyShootReady==SHOOTS)) {Sound(200,4);MyShootReady=0;space.MyShootBall=6;space.MyShootBallxpos=ShipPos+6;}
 }else{
 Sound(80,1);Sound(100,1); 
 Decompte++;
 if (Decompte>=30) {_delay_ms(600);if (((space.MonsterGroupeYpos)+(space.MonsterFloorMax+1))==7) {goto NEWGAME;}else{goto RestartLevel;}}}
 if (space.MyShootBall==-1) {if (MyShootReady<SHOOTS) {MyShootReady++;}
-}
-}
-}
+}}}
 ////////////////////////////////// main end /////////////////////////////////
 
 void SpeedControle(SPACE *space){
@@ -261,19 +261,17 @@ uint8_t MYSHIELD=0x00;
 
 // select the appropriate bitmap
 uint8_t *render;  // sbr <start>
-switch( render0_picture1 )
+if ( render0_picture1 == GAME_SCREEN ) {
+  render = back_compressed;
+}
+else /* INTRO_SCREEN *or* BLANK_SCREEN */
 {
-case INTRO_BACKGROUND:
-  render = intro_compressed; break;
-case STARS_BACKGROUND:
-  render = back_compressed; break;
-default:
-  render = blank_compressed;
+  render = intro_compressed;
 }; // sbr <end>
 
 // we want an arcade style live highscore display
 newHighScore |= updateHighScorePoints();  // sbr
-if ( render0_picture1 == STARS_BACKGROUND ) // sbr
+if ( render0_picture1 == GAME_SCREEN ) // sbr
 { 
   // if new high score, change name to '1UP'
   if ( newHighScore )
@@ -296,19 +294,17 @@ for (y = 0; y < 8; y++)
   for (x = 0; x < 128; x++)
   {
     uint8_t pixels; // sbr
-    //uint8_t txtPixels = displayZoomedText(x,y); // sbr
-    uint8_t txtPixels = displayText(x,y); // sbr
     
-    if (render0_picture1 == STARS_BACKGROUND) {
+    if (render0_picture1 == GAME_SCREEN) {
+      uint8_t txtPixels = displayText(x,y); // sbr
       if (ShieldRemoved==0) {MYSHIELD=MyShield(x,y,space);}else{MYSHIELD=0x00;}
       pixels = (background(x,y,space)|LivePrint(x,y)|Vesso(x,y,space)|UFOWrite(x,y,space)|Monster(x,y,space)|MyShoot(x,y,space)|MonsterShoot(x,y,space)|txtPixels|MYSHIELD); // sbr
     }
-    else{
+    else if ( render0_picture1 == INTRO_SCREEN ) {
       pixels = chunkBuffer[x];
-      if (render0_picture1 == BLANK_BACKGROUND)
-      {
-        pixels |= displayZoomedText(x,y);        
-      }
+    }
+    else {
+      pixels = displayZoomedText(x,y);        
     }
     SSD1306.ssd1306_send_byte( pixels ); // sbr
   }
@@ -442,7 +438,7 @@ switch (LineSH){
 return Var0;
 }
 
-inline uint8_t BOOLREAD(uint8_t SHnum,uint8_t LineSH,SPACE *space ){
+uint8_t BOOLREAD(uint8_t SHnum,uint8_t LineSH,SPACE *space ){
 uint8_t Var0=(0b10000000>>LineSH);
 if ((space->Shield[SHnum]&Var0)!=0) {return 1;}else{return 0;}
 }
@@ -506,8 +502,10 @@ if (Varx<0) {Varx=0;}
 if (Vary<0) {Vary=0;}
 if (Varx>5) {goto End;}
 if (Vary>3) {goto End;}
+// the array contains 'int8_t' but we consider it 'uint8_t'...
 uint8_t monster = space->MonsterGrid[Vary][Varx]; // sbr
-if ((monster>-1) && (monster<6)) {                // sbr
+// '-1' equals '255' unsigned, so it is larger than '6'
+if ( monster < 6 ) {                // sbr
   // gotcha!
   Sound(50,10);
   if ( monster < 2 ) { addScore( 10 ); }  // sbr
@@ -636,3 +634,9 @@ space->DecalageY8=0;
 space->frameMax=8;
 space->Direction=1; //1 right 0 gauche  
 space->oneFrame=0;}
+
+// just the standard 'be-beep'
+void bebeep()
+{
+  Sound(100,125); Sound(50,125);
+}

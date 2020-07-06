@@ -282,6 +282,7 @@ const uint8_t  intro_compressed [] PROGMEM = {
 0x0E, 0x03, 0x01, 0xA5
 };
 
+/*
 // sbr
 // RLE compressed empty screen in 8 chunks of 128 uncompressed bytes
 // Compressed size is 32 bytes (3%)
@@ -295,3 +296,4 @@ const uint8_t  blank_compressed [] PROGMEM = {
   0xBF,0xBF,0xBF,0xBF,
   0xBF,0xBF,0xBF,0xBF
 };
+*/
