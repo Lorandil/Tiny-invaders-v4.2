@@ -215,46 +215,6 @@ void convertValueToDigits( SCORE_TYPE value, uint8_t *digits )
   while ( *divider != 0 );
 }
 
-/*--------------------------------------------------------------
-// converts 'value' to 6 decimal digits (if SCORE_TYPE equals uint16_t)
-void convertValueToDigits( SCORE_TYPE value, uint8_t *digits )
-{
-  uint8_t digit = '0';
-  while ( value >= 10000 )
-  {
-    digit++;
-    value -= 10000;
-  }
-  *digits++ = digit;
-  
-  digit = '0';
-  while ( value >= 1000 )
-  {
-    digit++;
-    value -= 1000;
-  }
-  *digits++ = digit;
-
-  digit = '0';
-  while ( value >= 100 )
-  {
-    digit++;
-    value -= 100;
-  }
-  *digits++ = digit;
-
-  digit = '0';
-  while ( value >= 10 )
-  {
-    digit++;
-    value -= 10;
-  }
-  *digits++ = digit;
-  
-  *digits = value + '0';
-}
-*/
-
 /*--------------------------------------------------------------*/
 // Displays a line of ascii character from the smallFont in the 
 // top line of the screen. To save flash memory, the font ranges
@@ -277,9 +237,8 @@ uint8_t displayText( uint8_t x, uint8_t y )
 }
 
 /*--------------------------------------------------------------*/
-// Display zoomed ascii character from the smallFont in three
-// lines of 16 characters centered vertically. 
-// The zoom factor is fixed to '2'.
+// Display zoomed ascii character from the smallFont in four
+// lines of 16 characters. The zoom factor is fixed to '2'.
 // If bit 7 is set, the character will be displayed inverted.
 // To save flash memory, the font ranges only from '0' to 'Z'.
 // Technical detail: The font is moved 1 pixel down to get a better
@@ -287,10 +246,10 @@ uint8_t displayText( uint8_t x, uint8_t y )
 uint8_t displayZoomedText( uint8_t x, uint8_t y )
 {
   // display should have a center line
-  y -= 1;
+  //y -= 1;
   // Nice trick: 'y' is unsigend, so if 'y' was '0',
   // then 'y - 1' will be '255' and thus greater than 6!
-  if ( y < 6 )
+  //if ( y < 6 )
   {
     // Find appropriate character in text array:
     // Font width is 4 px, zoom is 2x, so fetch a new character every 8 pixels
