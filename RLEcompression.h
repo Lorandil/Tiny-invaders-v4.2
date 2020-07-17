@@ -12,8 +12,10 @@
                             uint8_t *compressedData, uint16_t compressedBufferSize,
                             uint8_t maxLen = 31, bool outputToSerial = false );
   uint8_t *RLEdecompress( uint8_t *compressedData, 
-                          uint8_t *uncompressedData, uint16_t uncompressedByteCount );
+                          uint8_t *uncompressedData, uint16_t uncompressedByteCount,
+                          bool     mirrorFlag );
   uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
-                              uint8_t *uncompressedData, uint16_t uncompressedByteCount );
+                              uint8_t *uncompressedData, uint16_t uncompressedByteCount,
+                              bool     mirrorFlag );
 
 #endif

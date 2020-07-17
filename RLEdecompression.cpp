@@ -7,8 +7,10 @@
 // Input:  pCompressedData       - pointer to compressed data in RAM
 //         uncompressedDatar     - output buffer
 //         uncompressedByteCount - size of uncompressed data in bytes
+//         mirrorData            - mirror the data while uncompressing
 uint8_t *RLEdecompress( uint8_t *compressedData,
-                        uint8_t *uncompressedData, uint16_t uncompressedByteCount )
+                        uint8_t *uncompressedData, uint16_t uncompressedByteCount,
+                        bool     mirrorFlag )
 {
   while ( uncompressedByteCount != 0 )
   {
@@ -59,9 +61,18 @@ uint8_t *RLEdecompress( uint8_t *compressedData,
 // Input:  compressedData        - pointer to compressed data in PROGMEM
 //         uncompressedDatar     - output buffer
 //         uncompressedByteCount - size of uncompressed data in bytes
+//         mirrorFlag            - mirror the data while uncompressing
 uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
-                            uint8_t *uncompressedData, uint16_t uncompressedByteCount )
+                            uint8_t *uncompressedData, uint16_t uncompressedByteCount,
+                            bool     mirrorFlag )
 {
+  // mirror data?
+  if ( mirrorFlag )
+  {
+    // set output pointer behind the end of the buffer
+    uncompressedData += uncompressedByteCount;
+  }
+  
   while ( uncompressedByteCount != 0 )
   {
     uint8_t count = pgm_read_byte( compressedData++ );
@@ -85,7 +96,14 @@ uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
       // uncompress RLE compressed data
       for ( uint8_t n = 0; n < count; n++ )
       {
-        *uncompressedData++ = value;
+        if ( mirrorFlag )
+        {
+          *--uncompressedData = value;
+        }
+        else
+        {
+          *uncompressedData++ = value;
+        }
       }
     }
     else
@@ -95,7 +113,15 @@ uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
       // copy stored uncompressed data
       for ( uint8_t n = 0; n < count; n++ )
       {
-        *uncompressedData++ = pgm_read_byte( compressedData++ );
+        uint8_t value = pgm_read_byte( compressedData++ );
+        if ( mirrorFlag )
+        {
+          *--uncompressedData = value;
+        }
+        else
+        {
+          *uncompressedData++ = value;
+        }
       }
     }
     // remove processed bytes from count
