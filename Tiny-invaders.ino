@@ -40,23 +40,21 @@ const uint8_t BLANK_SCREEN = 2; // sbr
 // - to change <space> to 0x00
 const unsigned char PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
 const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E',';'}; // sbr
-const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E',':'}; // sbr
+const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E'}; // sbr
 const unsigned char PROGMEM txtGameOver[] = {'G','A','M','E',0,'O','V','E','R',';'}; // sbr
-const unsigned char PROGMEM txtPointValues[] = { 0, 0, 0, 0, 0, '^','_','`',0,'1','0', 0, 0, 0, 0, 0,  // sbr
-                                                 0, 0, 0, 0, 0, '<','=','>',0,'2','0', 0, 0, 0, 0, 0,  // sbr
-                                                 0, 0, 0, 0, 0, '[','\\',']',0,'4','0', 0, 0, 0, 0, 0, // sbr
-                                                 0, 0, 0, 0, 0, 'a','b','c',0,'?', 0, 0, 0, 0, 0, 0 }; // sbr
-
-//const uint8_t PROGMEM soundBeBeep[] = { 100, 125, 0, 
-//                                         50, 125, 0 };
-//const uint8_t PROGMEM soundNextLevel[] = { 110, 255, 4,
-//                                           130, 255, 4,
-//                                           100, 255, 4,
-//                                             1, 155, 2,
-//                                            60, 255, 0,
-//                                            60, 255, 0 };
-//const uint8_t PROGMEM soundCrawling[] = {  80, 1, 0,
-//                                          100, 1, 0 };
+// storing the full text screen is less expensive than adressing the lines individually
+/*
+const unsigned char PROGMEM txtPointValues[] =                       // sbr
+{                'a','b',':', 0  , 0 , 0 , 0, '?', 0 , 0 , 0 , 0 ,   // sbr
+  0 , 0 , 0 , 0 , 0 , 0 ,'[','\\',']', 0 , 0 ,'4','0', 0 , 0 , 0 ,   // sbr
+  0 , 0 , 0 , 0 ,'<','=','>', 0  , 0 , 0 , 0 ,'2','0', 0 , 0 , 0 ,   // sbr
+  0 , 0 , 0 , 0 , 0 , 0 ,'^','_' ,'`', 0 , 0 ,'1','0'             }; // sbr
+  */
+const unsigned char PROGMEM txtPointValues[] =                       // sbr
+{                    '^','_' ,'`', 0 , 0 ,'1','0', 0 , 0 , 0 , 0 ,   // sbr
+  0 , 0 , 0 , 0 , 0 ,'<','=' ,'>', 0 , 0 ,'2','0', 0 , 0 , 0 , 0 ,   // sbr
+  0 , 0 , 0 , 0 , 0 ,'[','\\',']', 0 , 0 ,'4','0', 0 , 0 , 0 , 0 ,   // sbr
+  0 , 0 , 0 , 0 , 0 ,'a','b' ,':', 0 , 0 ,'?','?'                 }; // sbr
 
 // EEPROM storage address for highscore and name
 const uint16_t TINY_INVADERS_EEPROM_ADDR = 128; // sbr
@@ -108,14 +106,16 @@ void loop() {
 
 NEWGAME:
   // remove all text from the buffer
-  clearText();  // sbr
-  // store hiscore to EEPROM (if necessary)
+  clearTextBuffer();  // sbr
+  // show new highscore?
   if ( newHighScore ) // sbr <start>
   {
+    // Congrats!
     showNewHighScore( &space );
   }
   else if ( !firstRun )
   {
+    // GAME OVER!
     showGameOver( &space );
   } // sbr <end>
   firstRun = false; // sbr
@@ -126,15 +126,25 @@ NEWGAME:
   mirrorBackground = false; // sbr
 //#endif
   // clear text buffer
-  clearText();  // sbr
-  // score in the top left corner
-  pgm_printText( 0, txtOneUp, sizeof( txtOneUp ) ); // sbr
-  // high score in the top right corner
-  printText( 22, getHighScoreName(), 3 ); // sbr
+  clearTextBuffer();  // sbr
 
+  uint16_t n = 0;
   while(1){
-    Tiny_Flip( INTRO_SCREEN,&space);  // sbr
-    if (digitalRead(1)==0) {bebeep(); showPointValues( &space ); goto BYPASS2;} // sbr
+
+    if ( n++ < 250 )
+    {
+      showIntroScreen( &space );  // sbr
+    }
+    else if ( n < 500 )
+    {
+      showPointValues( &space );
+    }
+    else
+    {
+      n = 0;
+    }
+    // exit if button pressed
+    if (digitalRead(1)==0) {bebeep(); goto BYPASS2;} // sbr
   }
   
 NEWLEVEL:
@@ -267,7 +277,7 @@ uint8_t LivePrint(uint8_t x,uint8_t y){
 
 void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
   uint8_t y,x; 
-  uint8_t MYSHIELD=0x00;
+  uint8_t MYSHIELD /*=0x00*/;
 
   // select the appropriate bitmap
   uint8_t *render;  // sbr <start>
@@ -283,6 +293,12 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
   newHighScore |= updateHighScorePoints();  // sbr
   if ( render0_picture1 == GAME_SCREEN ) // sbr
   { 
+    // remove old text from screen
+    clearTextBuffer();
+    // score in the top left corner
+    pgm_printText( 0, txtOneUp, sizeof( txtOneUp ) ); // sbr
+    // high score in the top right corner
+    printText( 22, getHighScoreName(), 3 ); // sbr
     // if new high score, change name to '1UP'
     if ( newHighScore )
     {
@@ -332,19 +348,29 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
                    | displayText(x,y) // sbr
                  );
       }
+      // render intro screen
       else if ( render0_picture1 == INTRO_SCREEN ) {
         pixels = chunkBuffer[x];
       }
+      // render text mode 16x4 only
       else {
         pixels = displayZoomedText(x,y);        
       }
       SSD1306.ssd1306_send_byte( pixels ); // sbr
-    }
+    } // for x
+    
     if (render0_picture1 == GAME_SCREEN) {
-      if (ShieldRemoved==0) {ShieldDestroy(0,space->MyShootBallxpos,space->MyShootBall,space);}
-      SSD1306.ssd1306_send_data_stop();
+      if (ShieldRemoved==0) {
+        ShieldDestroy(0,space->MyShootBallxpos,space->MyShootBall,space);
+        // shouldn't the transmission be always stopped?
+        //SSD1306.ssd1306_send_data_stop(); // sbr
+      }
     }
-  }
+    // this line appears to be optional, as it was never called during the intro screen...
+    // but hey, we still have some bytes left ;)
+    SSD1306.ssd1306_send_data_stop(); // sbr
+  } // for y
+  
   if (render0_picture1 == GAME_SCREEN) {
     if ((space->MonsterGroupeYpos<(2+(4-(space->MonsterFloorMax+1))))/*&&(LEVELS<=MAXLEVELSHIELDED)*/) {}
     else{
@@ -734,6 +760,7 @@ void VarResetNewLevel(SPACE *space){
   //space->oneFrame=0;
 }
 
+/*--------------------------------------------------------------*/
 // just the standard 'be-beep'
 void bebeep()
 {
@@ -741,6 +768,7 @@ void bebeep()
   //pgm_playSound( soundBeBeep, sizeof( soundBeBeep ) / 3 );
 }
 
+/*--------------------------------------------------------------*/
 // Displays the 'NEW HISCORE' message and allows the victorius player
 // to enter his initials to be saved for eternity in the EEPROM.
 // [The parameter 'space' isn't really necessary here, a NULL pointer
@@ -817,6 +845,7 @@ void showNewHighScore(SPACE *space )
   newHighScore = false;
 }
 
+/*--------------------------------------------------------------*/
 // Displays the game over message along with the player's score
 // [The parameter 'space' isn't really necessary here, a NULL pointer
 //  would do for 'Tiny_Flip()', but when the compiler inlines the code, 
@@ -824,8 +853,8 @@ void showNewHighScore(SPACE *space )
 void showGameOver(SPACE *space)
 {
   // just a simple 'GAME OVER!'
-  pgm_printText( 0 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
-  pgm_printText( 1 * 16 + 3, txtOneUp, sizeof( txtOneUp ) );
+  pgm_printText( 1 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
+  pgm_printText( 2 * 16 + 3, txtOneUp, sizeof( txtOneUp ) );
   // print player score
   uint8_t *textBuffer = getTextBuffer() + 1 * 16 + 7;
   convertValueToDigits( getScore(), textBuffer ); 
@@ -843,15 +872,28 @@ void showGameOver(SPACE *space)
   _delay_ms(3000);
 }
 
-void showPointValues( SPACE *space )
+/*--------------------------------------------------------------*/
+// [The parameter 'space' isn't really necessary here, a NULL pointer
+//  would do for 'Tiny_Flip()', but when the compiler inlines the code, 
+//  this version saves 2 bytes]
+void showIntroScreen( SPACE *space )
 {
-  memcpy_P( getTextBuffer(), txtPointValues, sizeof( txtPointValues ) );
-
-  // display!
-  Tiny_Flip( BLANK_SCREEN,space);
-  //_delay_ms(3000);
+  Tiny_Flip( INTRO_SCREEN, space );
 }
 
+/*--------------------------------------------------------------*/
+// [The parameter 'space' isn't really necessary here, a NULL pointer
+//  would do for 'Tiny_Flip()', but when the compiler inlines the code, 
+//  this version saves 2 bytes]
+void showPointValues( SPACE *space )
+{
+  pgm_printText( 5, txtPointValues, sizeof( txtPointValues ) );
+
+  // display!
+  Tiny_Flip( BLANK_SCREEN, space);
+}
+
+/*--------------------------------------------------------------*/
 // Calculate the backgound offset to get the background a little
 // less static.
 void calcNewBackgroundOffset( SPACE *space )
