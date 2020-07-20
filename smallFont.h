@@ -108,11 +108,18 @@ const uint8_t  charachterFont3x5[] PROGMEM = {
   0b00001010,
   0b00111110,
   0b00000000,
+  /*
   // :
   0b00000000,
   0b00010100,
   0b00000000,
   0b00000000,
+  */
+  // : - UFO right
+  0b01010000, // 0x50
+  0b11110000, // 0xF0
+  0b01100000, // 0x60
+  0b01000000, // 0x40
   // '!' instead of ';'
   0b00000000,
   0b00101110,
@@ -330,11 +337,13 @@ const uint8_t  charachterFont3x5[] PROGMEM = {
   0b01011000, // 0x58
   0b01011000, // 0x58
   0b01111000, // 0x78
+  /*
   // c - UFO right
   0b01010000, // 0x50
   0b11110000, // 0xF0
   0b01100000, // 0x60
   0b01000000, // 0x40
+  */
 };
 
 // a 4 bit zoom table for charachter enlargement
