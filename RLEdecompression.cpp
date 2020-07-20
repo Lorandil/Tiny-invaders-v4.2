@@ -8,10 +8,24 @@
 //         uncompressedDatar     - output buffer
 //         uncompressedByteCount - size of uncompressed data in bytes
 //         mirrorData            - mirror the data while uncompressing
+#ifdef _RLE_MIRROR_SUPPORT_
 uint8_t *RLEdecompress( uint8_t *compressedData,
                         uint8_t *uncompressedData, uint16_t uncompressedByteCount,
                         bool     mirrorFlag )
+#else
+uint8_t *RLEdecompress( uint8_t *compressedData,
+                        uint8_t *uncompressedData, uint16_t uncompressedByteCount )
+#endif
 {
+  #ifdef _RLE_MIRROR_SUPPORT_
+    // mirror data?
+    if ( mirrorFlag )
+    {
+      // set output pointer behind the end of the buffer
+      uncompressedData += uncompressedByteCount;
+    }
+  #endif
+
   while ( uncompressedByteCount != 0 )
   {
     uint8_t count = *compressedData++;
@@ -35,7 +49,16 @@ uint8_t *RLEdecompress( uint8_t *compressedData,
       // uncompress RLE compressed data
       for ( uint8_t n = 0; n < count; n++ )
       {
-        *uncompressedData++ = value;
+      #ifdef _RLE_MIRROR_SUPPORT_
+        if ( mirrorFlag )
+        {
+          *--uncompressedData = value;
+        }
+        else
+      #endif
+        {
+          *uncompressedData++ = value;
+        }
       }
     }
     else
@@ -46,7 +69,17 @@ uint8_t *RLEdecompress( uint8_t *compressedData,
       // copy stored uncompressed data
       for ( uint8_t n = 0; n < count; n++ )
       {
-        *uncompressedData++ = *compressedData++;
+        uint8_t value = *compressedData++;
+      #ifdef _RLE_MIRROR_SUPPORT_
+        if ( mirrorFlag )
+        {
+          *--uncompressedData = value;
+        }
+        else
+      #endif
+        {
+          *uncompressedData++ = value;
+        }
       }
     }
     // remove processed bytes from count
@@ -62,16 +95,23 @@ uint8_t *RLEdecompress( uint8_t *compressedData,
 //         uncompressedDatar     - output buffer
 //         uncompressedByteCount - size of uncompressed data in bytes
 //         mirrorFlag            - mirror the data while uncompressing
+#ifdef _RLE_MIRROR_SUPPORT_
 uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
                             uint8_t *uncompressedData, uint16_t uncompressedByteCount,
                             bool     mirrorFlag )
+#else
+uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
+                            uint8_t *uncompressedData, uint16_t uncompressedByteCount )
+#endif
 {
-  // mirror data?
-  if ( mirrorFlag )
-  {
-    // set output pointer behind the end of the buffer
-    uncompressedData += uncompressedByteCount;
-  }
+  #ifdef _RLE_MIRROR_SUPPORT_
+    // mirror data?
+    if ( mirrorFlag )
+    {
+      // set output pointer behind the end of the buffer
+      uncompressedData += uncompressedByteCount;
+    }
+  #endif
   
   while ( uncompressedByteCount != 0 )
   {
@@ -96,11 +136,13 @@ uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
       // uncompress RLE compressed data
       for ( uint8_t n = 0; n < count; n++ )
       {
+      #ifdef _RLE_MIRROR_SUPPORT_
         if ( mirrorFlag )
         {
           *--uncompressedData = value;
         }
         else
+      #endif
         {
           *uncompressedData++ = value;
         }
@@ -114,11 +156,13 @@ uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
       for ( uint8_t n = 0; n < count; n++ )
       {
         uint8_t value = pgm_read_byte( compressedData++ );
+      #ifdef _RLE_MIRROR_SUPPORT_
         if ( mirrorFlag )
         {
           *--uncompressedData = value;
         }
         else
+      #endif
         {
           *uncompressedData++ = value;
         }
