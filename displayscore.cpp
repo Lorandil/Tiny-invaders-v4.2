@@ -241,47 +241,39 @@ uint8_t displayText( uint8_t x, uint8_t y )
 // lines of 16 characters. The zoom factor is fixed to '2'.
 // If bit 7 is set, the character will be displayed inverted.
 // To save flash memory, the font ranges only from '0' to 'Z'.
-// Technical detail: The font is moved 1 pixel down to get a better
-// reverse display.
 uint8_t displayZoomedText( uint8_t x, uint8_t y )
 {
-  // display should have a center line
-  //y -= 1;
-  // Nice trick: 'y' is unsigend, so if 'y' was '0',
-  // then 'y - 1' will be '255' and thus greater than 6!
-  //if ( y < 6 )
+  // Find appropriate character in text array:
+  // Font width is 4 px, zoom is 2x, so fetch a new character every 8 pixels
+  uint8_t value = textBuffer[((y >> 1) << 4) + ( x >> 3)];
+  // is it a valid character?
+  if ( value != 0 )
   {
-    // Find appropriate character in text array:
-    // Font width is 4 px, zoom is 2x, so fetch a new character every 8 pixels
-    uint8_t value = textBuffer[((y >> 1) << 4) + ( x >> 3)];
-    // is it a valid character?
-    if ( value != 0 )
+    // MSB set? -> inverse video
+    uint8_t reverse = value & 0x80;
+    // remove MSB from value
+    value -= reverse;
+    // return the column value (move the font 1 pixel down, lowest pixel returns at the top)
+    value = ( pgm_read_byte( charachterFont3x5 + ( ( value - '0' ) << 2 ) + ( ( x >> 1 ) & 0x03 ) ) );
+    if ( ( y & 0x01 ) == 0 )
     {
-      // MSB set? -> inverse video
-      uint8_t reverse = value & 0x80;
-      // remove MSB from value
-      value -= reverse;
-      // return the column value (move the font 1 pixel down)
-      value = ( pgm_read_byte( charachterFont3x5 + ( ( value - '0' ) << 2 ) + ( ( x >> 1 ) & 0x03 ) ) ) << 1;
-      if ( ( y & 0x01 ) == 0 )
-      {
-        // upper line
-        value = ( pgm_read_byte( nibbleZoom + ( value & 0x0f ) ) );
-      }
-      else
-      {
-        // lower line
-        value = ( pgm_read_byte( nibbleZoom + ( value >> 4 ) ) );
-      }
-      // invert?
-      if ( reverse )
-      {
-        // invert pixels
-        value = value ^ 0xff;
-      }
-      return( value );
+      // upper line
+      value = ( pgm_read_byte( nibbleZoom + ( value & 0x0f ) ) );
     }
+    else
+    {
+      // lower line
+      value = ( pgm_read_byte( nibbleZoom + ( value >> 4 ) ) );
+    }
+    // invert?
+    if ( reverse )
+    {
+      // invert pixels
+      value = value ^ 0xff;
+    }
+    return( value );
   }
+
   // Please move along, there is nothing to be seen here...
   return( 0x00 );
 }
