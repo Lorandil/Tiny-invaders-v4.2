@@ -279,7 +279,7 @@ uint8_t displayZoomedText( uint8_t x, uint8_t y )
 }
 
 /*--------------------------------------------------------------*/
-void clearText()
+void clearTextBuffer()
 {
   memset( textBuffer, 0x00, sizeof( textBuffer ) );
 }
@@ -296,6 +296,13 @@ void pgm_printText( uint8_t x, uint8_t *text, uint8_t textLength )
   memcpy_P( textBuffer + x, text, textLength );
 }
 
+/*--------------------------------------------------------------*/
+uint8_t *getTextBuffer()
+{
+  return( textBuffer );
+}
+
+#ifdef _DEBUG
 /*--------------------------------------------------------------*/
 void printByteHex( uint8_t x, uint8_t value )
 {
@@ -327,13 +334,6 @@ void hexdumpEEPROM( uint8_t x, uint16_t addr, uint16_t byteCount )
   }
 }
 
-/*--------------------------------------------------------------*/
-uint8_t *getTextBuffer()
-{
-  return( textBuffer );
-}
-
-#ifdef _DEBUG
 /*--------------------------------------------------------------*/
 void SerialPrintHighScoreStruct()
 {
