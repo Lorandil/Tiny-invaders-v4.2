@@ -1,63 +1,9 @@
 #ifndef _SMALLFONT_H_
 #define _SMALLFONT_H_
 
-// a small 3x5 number font - ok, it's 4x8 ;)
-const uint8_t  numberFont3x5[] PROGMEM = {
-  // 0
-  0b00111100,
-  0b00100010,
-  0b00011110,
-  0b00000000,
-  // 1
-  0b00000000,
-  0b00111110,
-  0b00000000,
-  0b00000000,
-  // 2
-  0b00111010,
-  0b00101010,
-  0b00101110,
-  0b00000000,
-  // 3
-  0b00100010,
-  0b00101010,
-  0b00111110,
-  0b00000000,
-  // 4
-  0b00001110,
-  0b00001000,
-  0b00111100,
-  0b00000000,
-  // 5
-  0b00101110,
-  0b00101010,
-  0b00111010,
-  0b00000000,
-  // 6
-  0b00111110,
-  0b00101000,
-  0b00111000,
-  0b00000000,
-  // 7
-  0b00000010,
-  0b00110010,
-  0b00001110,
-  0b00000000,
-  // 8
-  0b00111110,
-  0b00101010,
-  0b00111110,
-  0b00000000,
-  // 9
-  0b00001110,
-  0b00001010,
-  0b00111110,
-  0b00000000,
-};
-
 // Small 3x5 charachter font - ok, it's 4x8 ;)
-// Modified ASCII-like code page: '0'-'9',':!<->?*','A'-'Z'
-const uint8_t  charachterFont3x5[] PROGMEM = {
+// Modified ASCII-like code page: '0'-'9','!?','A'-'Z' and some alien/UFO parts :)
+const uint8_t  characterFont3x5[] PROGMEM = {
   // 0
   0b00111100,
   0b00100010,
@@ -108,13 +54,6 @@ const uint8_t  charachterFont3x5[] PROGMEM = {
   0b00001010,
   0b00111110,
   0b00000000,
-  /*
-  // :
-  0b00000000,
-  0b00010100,
-  0b00000000,
-  0b00000000,
-  */
   // ';' - UFO center
   0b00111100, // 0x78 ror 1
   0b00101100, // 0x58 ror 1
@@ -140,23 +79,6 @@ const uint8_t  charachterFont3x5[] PROGMEM = {
   0b01111101, // 0x7d
   0b00011000, // 0x18
   0b01110000, // 0x70
-  /*
-  // <
-  0b00001000,
-  0b00010100,
-  0b00100010,
-  0b00000000,
-  // '-' instead of '='
-  0b00001000,
-  0b00001000,
-  0b00001000,
-  0b00000000,
-  // >
-  0b00100010,
-  0b00010100,
-  0b00001000,
-  0b00000000,
-  */
   // ?
   0b00000010,
   0b00101010,
@@ -332,18 +254,6 @@ const uint8_t  charachterFont3x5[] PROGMEM = {
   0b00110000, // 0x60 ror 1
   0b01111000, // 0xF0 ror 1
   0b00101000, // 0x50 ror 1
-  /*
-  // b - UFO center
-  0b00111100, // 0x78 ror 1
-  0b00101100, // 0x58 ror 1
-  0b00101100, // 0x58 ror 1
-  0b00111100, // 0x78 ror 1
-  // c - UFO right
-  0b01010000, // 0x50
-  0b11110000, // 0xF0
-  0b01100000, // 0x60
-  0b01000000, // 0x40
-  */
 };
 
 // a 4 bit zoom table for charachter enlargement

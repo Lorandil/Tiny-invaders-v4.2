@@ -47,10 +47,4 @@ void printText( uint8_t x, uint8_t *text, uint8_t textLength );
 void __attribute__ ((noinline)) pgm_printText( uint8_t x, uint8_t *text, uint8_t textLength );
 uint8_t *getTextBuffer();
 
-#ifdef _DEBUG
-  void printByteHex( uint8_t x, uint8_t value );
-  void hexdumpEEPROM( uint8_t x, uint16_t addr, uint16_t byteCount );
-  void SerialPrintHighScoreStruct();
-#endif
-
 #endif
