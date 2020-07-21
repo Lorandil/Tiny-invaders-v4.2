@@ -20,7 +20,7 @@ volatile static HISCORE _hiScore;
 static uint8_t textBuffer[64];
 static SCORE_TYPE score;
 
-void __attribute__ ((noinline)) resetScore();
+void resetScore();
 void __attribute__ ((noinline)) addScore( SCORE_TYPE points );
 void __attribute__ ((noinline)) setScore( SCORE_TYPE points );
 SCORE_TYPE __attribute__ ((noinline))getScore();
@@ -44,7 +44,7 @@ uint8_t displayText( uint8_t x,uint8_t y );
 uint8_t displayZoomedText( uint8_t x, uint8_t y );
 void __attribute__ ((noinline)) clearTextBuffer();
 void printText( uint8_t x, uint8_t *text, uint8_t textLength );
-void pgm_printText( uint8_t x, uint8_t *text, uint8_t textLength );
+void __attribute__ ((noinline)) pgm_printText( uint8_t x, uint8_t *text, uint8_t textLength );
 uint8_t *getTextBuffer();
 
 #ifdef _DEBUG
