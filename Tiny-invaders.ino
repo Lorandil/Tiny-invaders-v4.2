@@ -39,23 +39,24 @@ const uint8_t BLANK_SCREEN = 2; // sbr
 // - to save the terminating zero a string definition would cause ;)
 // - to change <space> to 0x00
 const unsigned char PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
-const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E',';'}; // sbr
+const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E','@'}; // sbr
 const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E'}; // sbr
-const unsigned char PROGMEM txtGameOver[] = {'G','A','M','E',0,'O','V','E','R',';'}; // sbr
+//const unsigned char PROGMEM txtGameOver[] = {'G','A','M','E',0,'O','V','E','R','@'}; // sbr
+// Alien point values
 // storing the full text screen is less expensive than adressing the lines individually
-/*
-const unsigned char PROGMEM txtPointValues[] =                       // sbr
-{                'a','b',':', 0  , 0 , 0 , 0, '?', 0 , 0 , 0 , 0 ,   // sbr
-  0 , 0 , 0 , 0 , 0 , 0 ,'[','\\',']', 0 , 0 ,'4','0', 0 , 0 , 0 ,   // sbr
-  0 , 0 , 0 , 0 ,'<','=','>', 0  , 0 , 0 , 0 ,'2','0', 0 , 0 , 0 ,   // sbr
-  0 , 0 , 0 , 0 , 0 , 0 ,'^','_' ,'`', 0 , 0 ,'1','0'             }; // sbr
-  */
 const unsigned char PROGMEM txtPointValues[] =                       // sbr
 {                    '^','_' ,'`', 0 , 0 ,'1','0', 0 , 0 , 0 , 0 ,   // sbr
   0 , 0 , 0 , 0 , 0 ,'<','=' ,'>', 0 , 0 ,'2','0', 0 , 0 , 0 , 0 ,   // sbr
   0 , 0 , 0 , 0 , 0 ,'[','\\',']', 0 , 0 ,'4','0', 0 , 0 , 0 , 0 ,   // sbr
-  0 , 0 , 0 , 0 , 0 ,'a','b' ,':', 0 , 0 ,'?','?'                 }; // sbr
-
+  0 , 0 , 0 , 0 , 0 ,'a',':' ,';', 0 , 0 ,'?','?'                 }; // sbr
+// GAME OVER!
+// storing the full text screen is less expensive than adressing the lines individually
+const unsigned char PROGMEM txtGameOver[] = 
+{'[','\\',']','<','=','>','[','\\',']' ,'^','_','`','a',':',';' , 0 , // sbr
+  0 , 0  , 0 ,'G','A','M','E', 0  ,'O' ,'V','E','R', 0 ,'<','=' ,'>', // sbr
+ '^','_' ,'`', 0 ,'1','U','P', 0  ,'1' ,'2','3','4','5', 0 , 0  , 0 , // sbr
+  0 ,'a',':',';','[','\\',']','^','_' ,'`','<','=','>' ,'[','\\',']'  // sbr
+};
 // EEPROM storage address for highscore and name
 const uint16_t TINY_INVADERS_EEPROM_ADDR = 128; // sbr
 
@@ -853,10 +854,11 @@ void showNewHighScore(SPACE *space )
 void showGameOver(SPACE *space)
 {
   // just a simple 'GAME OVER!'
-  pgm_printText( 1 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
-  pgm_printText( 2 * 16 + 3, txtOneUp, sizeof( txtOneUp ) );
+  //pgm_printText( 1 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
+  //pgm_printText( 2 * 16 + 3, txtOneUp, sizeof( txtOneUp ) );
+  pgm_printText( 0, txtGameOver, sizeof( txtGameOver ) );
   // print player score
-  uint8_t *textBuffer = getTextBuffer() + 1 * 16 + 7;
+  uint8_t *textBuffer = getTextBuffer() + 2 * 16 + 8;
   convertValueToDigits( getScore(), textBuffer ); 
 /*
   // we need just the word 'HISCORE' :)
