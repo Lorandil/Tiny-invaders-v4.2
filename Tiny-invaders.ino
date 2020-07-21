@@ -33,15 +33,14 @@ const uint8_t GAME_SCREEN  = 0; // sbr
 const uint8_t INTRO_SCREEN = 1; // sbr
 const uint8_t BLANK_SCREEN = 2; // sbr
 
-// special charset: '0'-'9',':!<->?*','A'-'Z'
-// ';' means '!', '=' means '-' and '@' means '*'
+// special charset: '0'-'9','!?','A'-'Z'
+// '@' means '!', other characters are specials symbols (aliens, UFO)
 // The strange text definitions as arrays of chars were done 
 // - to save the terminating zero a string definition would cause ;)
 // - to change <space> to 0x00
 const unsigned char PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
 const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E','@'}; // sbr
 const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E'}; // sbr
-//const unsigned char PROGMEM txtGameOver[] = {'G','A','M','E',0,'O','V','E','R','@'}; // sbr
 // Alien point values
 // storing the full text screen is less expensive than adressing the lines individually
 const unsigned char PROGMEM txtPointValues[] =                       // sbr
@@ -73,9 +72,7 @@ uint8_t chunkBuffer[128]; // sbr
 // no new highscore yet
 bool newHighScore;  // sbr
 bool firstRun = true; // sbr
-//#ifdef _RLE_MIRROR_SUPPORT_
 bool mirrorBackground;  // sbr
-//#endif
 // fin var public
 
 void setup() {
@@ -123,9 +120,7 @@ NEWGAME:
   resetScore(); // sbr
   Live=3;
   LEVELS=0;
-//#ifdef _RLE_MIRROR_SUPPORT_  
   mirrorBackground = false; // sbr
-//#endif
   // clear text buffer
   clearTextBuffer();  // sbr
 
@@ -150,10 +145,8 @@ NEWGAME:
   
 NEWLEVEL:
   _delay_ms(1000);
-//#ifdef _RLE_MIRROR_SUPPORT_  
   // flip mirror flag between two levels
   mirrorBackground = !mirrorBackground; // sbr
-//#endif
 BYPASS2:
   VarResetNewLevel(&space);
   SpeedControle(&space);
@@ -171,7 +164,6 @@ Bypass:
   _delay_ms(1000);
   while(1){
     if (MONSTERrest==0) {
-      //pgm_playSound( soundNextLevel, sizeof( soundNextLevel ) / 3 ); // sbr
       Sound(110,255);_delay_ms(40);Sound(130,255);_delay_ms(40);Sound(100,255);
       _delay_ms(40);Sound(1,155);_delay_ms(20);Sound(60,255);Sound(60,255);
       if (LEVELS<9) {LEVELS++;}
@@ -309,12 +301,6 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
     convertValueToDigits( getHighScorePoints(), getTextBuffer() + 26 ); // sbr
   } // sbr
 
-  // prevent big planet from wrapping around the screen
-  // (placed here to save some bytes)
-  #ifdef _RLE_MIRROR_SUPPORT_
-    if ( mirrorBackground ) { space->ScrBackV+=16; } // sbr
-  #endif
-
   // just calculate the offset once
   //space.ScrBackV=(ShipPos/14)+52;
   calcNewBackgroundOffset( space ); // sbr
@@ -322,11 +308,8 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
   for (y = 0; y < 8; y++)
   {
     // uncompress chunk and save next address
-    #ifdef _RLE_MIRROR_SUPPORT_
-      render = pgm_RLEdecompress( render, chunkBuffer, 128, mirrorBackground ); // sbr
-    #else
-      render = pgm_RLEdecompress( render, chunkBuffer, 128 ); // sbr
-    #endif    
+    render = pgm_RLEdecompress( render, chunkBuffer, 128 ); // sbr
+    // initialize image transfer to segment 'y'
     SSD1306.ssd1306_send_command(0xb0 + y);
     SSD1306.ssd1306_send_command(0x00); 
     SSD1306.ssd1306_send_command(0x10);  
@@ -766,7 +749,6 @@ void VarResetNewLevel(SPACE *space){
 void bebeep()
 {
   Sound(100,125); Sound(50,125);
-  //pgm_playSound( soundBeBeep, sizeof( soundBeBeep ) / 3 );
 }
 
 /*--------------------------------------------------------------*/
@@ -853,22 +835,11 @@ void showNewHighScore(SPACE *space )
 //  this version saves 2 bytes]
 void showGameOver(SPACE *space)
 {
-  // just a simple 'GAME OVER!'
-  //pgm_printText( 1 * 16 + 3, txtGameOver, sizeof( txtGameOver ) );
-  //pgm_printText( 2 * 16 + 3, txtOneUp, sizeof( txtOneUp ) );
+  // just a simple 'GAME OVER!' screen with some aliens
   pgm_printText( 0, txtGameOver, sizeof( txtGameOver ) );
   // print player score
   uint8_t *textBuffer = getTextBuffer() + 2 * 16 + 8;
   convertValueToDigits( getScore(), textBuffer ); 
-/*
-  // we need just the word 'HISCORE' :)
-  pgm_printText( 2 * 16 + 4, txtNewHiScore + 4, sizeof( txtNewHiScore ) - 4 );
-  // without the '!'
-  textBuffer[1 * 16 + 4] = 0;
-  // initials of the hiscore owner
-  printText( 3 * 16 + 3, getHighScoreName(), 3 );
-  convertValueToDigits( getHighScorePoints(), textBuffer + 32 );
-*/
   // display!
   Tiny_Flip( BLANK_SCREEN,space);
   _delay_ms(3000);
