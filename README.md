@@ -46,4 +46,4 @@ already is...).
 
 
 # License 
-The original code was published under the GPL v3
+GNU General Public License v3.0
