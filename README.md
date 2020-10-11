@@ -1,15 +1,15 @@
 # Tiny Invaders v4.2	
 
-Improved version of Daniel C.'s Tiny Invaders v3 
+Improved version of Daniel C's (Électro L.I.B) Tiny Invaders v3.1
 
 
 # Introduction 
 
 When I discovered the Tiny Joypad project (https://www.tinyjoypad.com/tinyjoypad_attiny85) I was immediately fascinated by Tiny invaders.
-A full arcade game with a scrolling background in only 8kB - fully written in C++.
+A full arcade game with a scrolling background in only 8kB - completely written in C++.
 It was fun to play, but something was missing...
 
-I decided the game would be even more fun with a score display, and perhaps
+I thought the game would be even more fun with a score display, and perhaps
 a high score display. Problem was, the flash memory was already quite low.
 I tried nonetheless and failed.
 
@@ -17,6 +17,7 @@ So I decided to free some memory by compressing the graphics. Et voilà:
 RLE compressing the graphics gave me about 1kB of flash, enough to add the
 decompression code (~160 bytes), a small font (3x5) and (high) score management
 (even with EEPROM storage).
+Because there were still some bytes left, I added more features ;)
 
 
 # New Features 
