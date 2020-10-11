@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-#include "RLEcompression.h"
+#include "RLEdecompression.h"
 
 /*--------------------------------------------------------------*/
 // Input:  compressedData        - pointer to compressed data in PROGMEM

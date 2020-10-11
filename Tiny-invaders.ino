@@ -1,11 +1,12 @@
 //   >>>>>  T-I-N-Y  I-N-V-A-D-E-R-S v3.0 for ATTINY85  GPLv3 <<<<
 //						Tinyjoypad rev2 compatible
 //                   Programmer: Daniel C 2018-2020
+//                   Enhancements: Sven Bruns 2020
 //              Contact EMAIL: electro_l.i.b@tinyjoypad.com
 //                    https://www.tinyjoypad.com
 //         https://sites.google.com/view/arduino-collection
 
-//  Tiny Invaders v3.0 is free software: you can redistribute it and/or modify
+//  Tiny Invaders v4.2 is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
@@ -24,7 +25,7 @@
 #include <ssd1306xled.h>
 #include "spritebank.h"
 #include "displayscore.h" // sbr
-#include "RLEcompression.h" // sbr
+#include "RLEdecompression.h" // sbr
 
 #define MAXLEVELSHIELDED 3
 

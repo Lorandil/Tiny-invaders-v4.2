@@ -1,5 +1,5 @@
-#ifndef _RLE_COMPRESSION_H_
-#define _RLE_COMPRESSION_H_
+#ifndef _RLE_DECOMPRESSION_H_
+#define _RLE_DECOMPRESSION_H_
 
   const uint8_t RLE_COMPRESSED_DATA = 0x80;
   const uint8_t RLE_COMPRESSED_0xFF = 0x40;
