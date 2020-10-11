@@ -39,9 +39,10 @@ Because there were still some bytes left, I added more features ;)
 
 # Credits
 
-I really want to thank Daniel for all the fun this project gave me, this really was
-a challenge and I learned a lot about optimizing for size (and speed) on ATtinys
-(and about how frustratingly clever the GCC already is...).
+I really want to thank Daniel from Électro L.I.B for his great work in the TinyJoypad project.
+Working on this project gave me a lot of fun, this really was a challenge and I learned a lot 
+about optimizing for size (and speed) on ATtinys (and about how frustratingly clever the GCC 
+already is...).
 
 
 # License 
