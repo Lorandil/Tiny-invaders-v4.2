@@ -1,7 +1,7 @@
 //   >>>>>  T-I-N-Y  I-N-V-A-D-E-R-S v3.0 for ATTINY85  GPLv3 <<<<
 //						Tinyjoypad rev2 compatible
 //                   Programmer: Daniel C 2018-2020
-//                   Enhancements: Sven Bruns 2020
+//                   Enhancements: Sven B 2020
 //              Contact EMAIL: electro_l.i.b@tinyjoypad.com
 //                    https://www.tinyjoypad.com
 //         https://sites.google.com/view/arduino-collection
