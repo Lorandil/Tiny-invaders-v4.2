@@ -78,9 +78,11 @@ bool mirrorBackground;  // sbr
 
 void setup() {
   SSD1306.ssd1306_init();
-  pinMode(1,INPUT);
-  DDRB =DDRB|0b00010000;
-  pinMode(A0,INPUT); 
+  // not using 'pinMode()' here saves ~100 bytes of flash!
+  // configure A0, A3 and D1 as input
+  DDRB &= ~( ( 1 << PB5) | ( 1 << PB3 ) | ( 1 << PB1 ) );
+  // configure A2 as output
+  DDRB |= ( 1 << PB4 );
   // restore highscore from EEPROM
   initHighScoreStruct( TINY_INVADERS_EEPROM_ADDR ); // sbr
 }
@@ -784,10 +786,12 @@ void showNewHighScore(SPACE *space )
       uint8_t letter = *initials;
       
       // read the analog input only once
-      uint16_t input = analogRead( A0 ) - 500;
+      uint16_t inputX = analogRead( A0 ) - 500;
+      uint16_t inputY = analogRead( A3 ) - 500;
 
-      // right button pressed?
-      if ( input < 250 ) 
+
+      // right/up button pressed?
+      if ( ( inputX < 250 ) || ( inputY < 250 ) )
       {
         letter++;
         if ( letter > 'Z' ) { letter = '?'; }
@@ -795,9 +799,10 @@ void showNewHighScore(SPACE *space )
         bebeep();
       }
       
-      // left button pressed?
-      input -= 250;
-      if ( input < 200 )
+      // left/down button pressed?
+      inputX -= 250;
+      inputY -= 250;
+      if ( ( inputX < 200 ) || ( inputY < 200 ) )
       {
         letter--;
         if ( letter < '?' ) { letter = 'Z'; }
