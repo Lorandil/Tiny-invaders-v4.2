@@ -314,8 +314,16 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
     render = pgm_RLEdecompress( render, chunkBuffer, 128 ); // sbr
     // initialize image transfer to segment 'y'
     SSD1306.ssd1306_send_command(0xb0 + y);
-    SSD1306.ssd1306_send_command(0x00); 
+  #ifdef _USE_SH1106_
+    // SH1106 internally uses 132 pixels/line,
+    // output is (mostly?) centered, so we need to start at position 2
+    SSD1306.ssd1306_send_command(0x02);
     SSD1306.ssd1306_send_command(0x10);  
+  #else
+    // classic SSD1306 supports only 128 pixels/line, so we start at 0
+    SSD1306.ssd1306_send_command(0x00);
+    SSD1306.ssd1306_send_command(0x10);  
+  #endif    
     SSD1306.ssd1306_send_data_start();
     
     for (x = 0; x < 128; x++)
@@ -681,16 +689,25 @@ uint8_t MonsterRefreshMove(SPACE *space){
   }
 }
 
-void Sound(uint8_t freq,uint8_t dur){
-  for (uint8_t t=0;t<dur;t++){
-    if (freq!=0) {PORTB = PORTB|0b00010000;}
-    for (uint8_t t=0;t<(255-freq);t++){
-      _delay_us(1);
-    }
+/*-------------------------------------------------------*/
+void _variableDelay_us( uint8_t delayValue )
+{
+  while ( delayValue-- != 0 )
+  {
+    _delay_us( 1 );
+  }
+}
+
+/*-------------------------------------------------------*/
+// Code optimization by sbr
+void Sound( const uint8_t freq, const uint8_t dur )
+{
+  for ( uint8_t t = 0; t < dur; t++ )
+  {
+    if ( freq!=0 ){ PORTB = PORTB|0b00010000; }
+    _variableDelay_us( 255 - freq );
     PORTB = PORTB&0b11101111;
-    for (uint8_t t=0;t<(255-freq);t++){
-      _delay_us(1);
-    }
+    _variableDelay_us( 255 - freq );
   }
 }
 
