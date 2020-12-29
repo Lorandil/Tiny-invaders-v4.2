@@ -22,6 +22,8 @@
 //the code work at 16MHZ internal
 //and use ssd1306xled Library for SSD1306 oled display 128x64
 
+//#define _USE_SH1106_
+
 #include <ssd1306xled.h>
 #include "spritebank.h"
 #include "displayscore.h" // sbr
