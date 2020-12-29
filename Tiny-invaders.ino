@@ -76,6 +76,7 @@ uint8_t chunkBuffer[128]; // sbr
 bool newHighScore;  // sbr
 bool firstRun = true; // sbr
 bool mirrorBackground;  // sbr
+SPACE space;  // sbr
 // fin var public
 
 void setup() {
@@ -105,7 +106,6 @@ void loop() {
   uint8_t VarPot;
   uint8_t MyShootReady=SHOOTS;
   newHighScore = false; // sbr
-  SPACE space;
 
 NEWGAME:
   // remove all text from the buffer
