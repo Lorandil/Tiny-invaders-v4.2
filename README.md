@@ -35,6 +35,13 @@ Because there were still some bytes left, I added more features ;)
 * Added comments
 * Reformatted original code (sorry for that!)
 * Also some of the original routines needed to be rewritten for a smaller flash memory footprint.
+* Added compile time support for SH1106 displays: Just uncomment 
+  //#define _USE_SH1106_
+  at the top of Tiny-invaders.ino to get the display correctly centered on SH1106.
+  The #define is necessary, because compared to the SSD1306 the SH1106 internally works with 132 bytes 
+  per line. By default the centered 128 bytes (2..129) are displayed, causing two missing rows on the
+  left and 2 lines garbage on the right. There is a possiblity that the display's manufacturer can choose
+  how to connect the controller pins to the actual display.
 
 
 # Credits
