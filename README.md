@@ -42,7 +42,10 @@ Because there were still some bytes left, I added more features ;)
   per line. By default the centered 128 bytes (2..129) are displayed, causing two missing rows on the
   left and 2 lines garbage on the right. There is a possiblity that the display's manufacturer can choose
   how to connect the controller pins to the actual display.
+* Added a sliding animation as a transition between the levels
 
+# Current Size
+  8052 bytes (140 bytes left)
 
 # Credits
 
