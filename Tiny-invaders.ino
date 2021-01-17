@@ -194,7 +194,8 @@ Bypass:
   ShipDead=0;
   Decompte=0;
   while(1){
-    if (MONSTERrest==0) {
+    //if (MONSTERrest==0) {
+    if (MONSTERrest < 20 ) {
       Sound(110,255);_delay_ms(40);Sound(130,255);_delay_ms(40);Sound(100,255);
       _delay_ms(40);Sound(1,155);_delay_ms(20);Sound(60,255);Sound(60,255);
       // let the new level slide in from the right
@@ -955,6 +956,13 @@ void calcNewBackgroundOffset( SPACE *space )
   {
     space->levelShiftOffsetX += 4;
     space->levelShiftOffsetX &= 0x7f;
+    if (    ( space->levelShiftOffsetX == 0 )
+         || ( space->levelShiftOffsetX == 68 )
+       )
+    {
+      space->newLevelAnimation = false;
+    }
+#if 0
     if ( mirrorBackground )
     {
       if ( space->levelShiftOffsetX == 68 )
@@ -969,6 +977,7 @@ void calcNewBackgroundOffset( SPACE *space )
         space->newLevelAnimation = false;
       }
     }
+#endif
     space->ScrBackV = ( scrBackV + space->levelShiftOffsetX ) & 0x7f;
   }
   else
