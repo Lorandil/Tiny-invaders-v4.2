@@ -193,13 +193,20 @@ BYPASS2:
 Bypass:
   ShipDead=0;
   Decompte=0;
-  Tiny_Flip( GAME_SCREEN,&space); // sbr
-  _delay_ms(1000);
   while(1){
     if (MONSTERrest==0) {
       Sound(110,255);_delay_ms(40);Sound(130,255);_delay_ms(40);Sound(100,255);
       _delay_ms(40);Sound(1,155);_delay_ms(20);Sound(60,255);Sound(60,255);
+      // let the new level slide in from the right
+      space.newLevelAnimation = true;   // sbr
       if (LEVELS<9) {LEVELS++;}
+      // display new level animation
+      while ( space.newLevelAnimation ) // sbr
+      {                                 // sbr
+        Tiny_Flip( GAME_SCREEN,&space); // sbr
+      }                                 // sbr
+      _delay_ms(500);                   // sbr
+      // start next level
       goto NEWLEVEL;
     }
     if ((((space.MonsterGroupeYpos)+(space.MonsterFloorMax+1))==7)&&(Decompte==0)) {ShipDead=1;}
@@ -809,6 +816,8 @@ void VarResetNewLevel(SPACE *space){
   space->frameMax=8;
   space->Direction=1; //1 right 0 gauche  
   //space->oneFrame=0;
+  space->newLevelAnimation = false; // sbr
+  space->levelShiftOffsetX = 0;     // sbr
 }
 
 /*--------------------------------------------------------------*/
@@ -941,16 +950,39 @@ void showPointValues( SPACE *space )
 void calcNewBackgroundOffset( SPACE *space )
 {
   uint8_t scrBackV = (ShipPos/14) + 52;
-  
-  if ( mirrorBackground )
+
+  if ( space->newLevelAnimation )
   {
-    // Shift the background image about 50%.
-    // With this image wrapping gives almost the same 
-    // result as mirroring the image (which would cost some more bytes)
-    space->ScrBackV = scrBackV + 70;
+    space->levelShiftOffsetX += 4;
+    space->levelShiftOffsetX &= 0x7f;
+    if ( mirrorBackground )
+    {
+      if ( space->levelShiftOffsetX == 68 )
+      {
+        space->newLevelAnimation = false;
+      }
+    }
+    else
+    {
+      if ( space->levelShiftOffsetX == 0 )
+      {
+        space->newLevelAnimation = false;
+      }
+    }
+    space->ScrBackV = ( scrBackV + space->levelShiftOffsetX ) & 0x7f;
   }
   else
   {
-    space->ScrBackV = scrBackV;
+    if ( mirrorBackground )
+    {
+      // Shift the background image about 50%.
+      // With this image wrapping gives almost the same 
+      // result as mirroring the image (which would cost some more bytes)
+      space->ScrBackV = scrBackV + 68;
+    }
+    else
+    {
+      space->ScrBackV = scrBackV;
+    }
   }
 }

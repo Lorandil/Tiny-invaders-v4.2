@@ -45,6 +45,9 @@ uint8_t MonsterGroupeYpos;
 uint8_t DecalageY8;
 uint8_t frameMax;
 uint8_t Direction;
+// a new level will slide in from the right
+bool    newLevelAnimation;  // sbr
+uint8_t levelShiftOffsetX;  // sbr
 }SPACE;
 
 const int8_t MonstersLevels [] PROGMEM =  {
