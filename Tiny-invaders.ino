@@ -89,8 +89,10 @@ uint8_t chunkBuffer[128]; // sbr
 // no new highscore yet
 bool newHighScore;  // sbr
 bool firstRun = true; // sbr
-bool mirrorBackground;  // sbr
 SPACE space;  // sbr
+// a new level will slide in from the right
+bool    newLevelAnimation;  // sbr
+uint8_t levelShiftOffsetX;  // sbr
 // fin var public
 
 void setup() {
@@ -153,7 +155,9 @@ NEWGAME:
   resetScore(); // sbr
   Live=3;
   LEVELS=0;
-  mirrorBackground = false; // sbr
+  // don't "mirror" the background
+  newLevelAnimation = false;  // sbr
+  levelShiftOffsetX = 0; // sbr 
   // clear text buffer
   clearTextBuffer();  // sbr
 
@@ -178,8 +182,6 @@ NEWGAME:
   
 NEWLEVEL:
   _delay_ms(1000);
-  // flip mirror flag between two levels
-  mirrorBackground = !mirrorBackground; // sbr
 BYPASS2:
   VarResetNewLevel(&space);
   SpeedControle(&space);
@@ -194,15 +196,14 @@ Bypass:
   ShipDead=0;
   Decompte=0;
   while(1){
-    //if (MONSTERrest==0) {
-    if (MONSTERrest < 20 ) {
+    if (MONSTERrest==0) {
       Sound(110,255);_delay_ms(40);Sound(130,255);_delay_ms(40);Sound(100,255);
       _delay_ms(40);Sound(1,155);_delay_ms(20);Sound(60,255);Sound(60,255);
       // let the new level slide in from the right
-      space.newLevelAnimation = true;   // sbr
+      newLevelAnimation = true;   // sbr
       if (LEVELS<9) {LEVELS++;}
       // display new level animation
-      while ( space.newLevelAnimation ) // sbr
+      while ( newLevelAnimation ) // sbr
       {                                 // sbr
         Tiny_Flip( GAME_SCREEN,&space); // sbr
       }                                 // sbr
@@ -817,8 +818,8 @@ void VarResetNewLevel(SPACE *space){
   space->frameMax=8;
   space->Direction=1; //1 right 0 gauche  
   //space->oneFrame=0;
-  space->newLevelAnimation = false; // sbr
-  space->levelShiftOffsetX = 0;     // sbr
+  newLevelAnimation = false; // sbr
+  //space->levelShiftOffsetX = 0;     // sbr
 }
 
 /*--------------------------------------------------------------*/
@@ -948,50 +949,27 @@ void showPointValues( SPACE *space )
 /*--------------------------------------------------------------*/
 // Calculate the backgound offset to get the background a little
 // less static.
+// Between the levels the background image will be shifted by about 50%.
+// This image wrapping gives almost the same result as mirroring the 
+// image (which would cost some more bytes)
 void calcNewBackgroundOffset( SPACE *space )
 {
   uint8_t scrBackV = (ShipPos/14) + 52;
 
-  if ( space->newLevelAnimation )
+  if ( newLevelAnimation )
   {
-    space->levelShiftOffsetX += 4;
-    space->levelShiftOffsetX &= 0x7f;
-    if (    ( space->levelShiftOffsetX == 0 )
-         || ( space->levelShiftOffsetX == 68 )
+    // move the background image by four pixels
+    levelShiftOffsetX += 4;
+    // limit the offset to 0..127
+    levelShiftOffsetX &= 0x7f;
+    // sliding is finished if 'levelShiftOffsetX' reaches the next base position
+    if (    ( levelShiftOffsetX == 0 )
+         || ( levelShiftOffsetX == 68 )
        )
     {
-      space->newLevelAnimation = false;
-    }
-#if 0
-    if ( mirrorBackground )
-    {
-      if ( space->levelShiftOffsetX == 68 )
-      {
-        space->newLevelAnimation = false;
-      }
-    }
-    else
-    {
-      if ( space->levelShiftOffsetX == 0 )
-      {
-        space->newLevelAnimation = false;
-      }
-    }
-#endif
-    space->ScrBackV = ( scrBackV + space->levelShiftOffsetX ) & 0x7f;
-  }
-  else
-  {
-    if ( mirrorBackground )
-    {
-      // Shift the background image about 50%.
-      // With this image wrapping gives almost the same 
-      // result as mirroring the image (which would cost some more bytes)
-      space->ScrBackV = scrBackV + 68;
-    }
-    else
-    {
-      space->ScrBackV = scrBackV;
+      // done!
+      newLevelAnimation = false;
     }
   }
+  space->ScrBackV = ( scrBackV + levelShiftOffsetX ) & 0x7f;
 }
