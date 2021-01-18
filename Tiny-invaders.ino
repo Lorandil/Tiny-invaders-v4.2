@@ -32,10 +32,12 @@
   // fast library - but only works on ATTiny85
   #include <ssd1306xled.h>
 #else
+  // Arduino UNO or Mega2560 or ...
   #define LEFT_RIGHT_BUTTON A0
   #define UP_DOWN_BUTTON    A3
   #define FIRE_BUTTON       A1
-  // classic Adafruit library works on many controllers
+  // Classic Adafruit library works on many controllers, but not SH1106.
+  // Perhaps I will change to another library...
   #include <Adafruit_SSD1306.h>
   Adafruit_SSD1306 display( 128, 64, &Wire, -1 );
 #endif
@@ -199,12 +201,14 @@ Bypass:
     if (MONSTERrest==0) {
       Sound(110,255);_delay_ms(40);Sound(130,255);_delay_ms(40);Sound(100,255);
       _delay_ms(40);Sound(1,155);_delay_ms(20);Sound(60,255);Sound(60,255);
+      memset( space.MonsterGrid, 0xff, sizeof( space.MonsterGrid ) ); 
       // let the new level slide in from the right
       newLevelAnimation = true;   // sbr
       if (LEVELS<9) {LEVELS++;}
       // display new level animation
       while ( newLevelAnimation ) // sbr
       {                                 // sbr
+        // display background
         Tiny_Flip( GAME_SCREEN,&space); // sbr
       }                                 // sbr
       _delay_ms(500);                   // sbr

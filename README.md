@@ -45,7 +45,7 @@ Because there were still some bytes left, I added more features ;)
 * Added a sliding animation as a transition between the levels
 
 # Current Size
-  8052 bytes (140 bytes left)
+  8066 bytes (126 bytes left)
 
 # Credits
 
