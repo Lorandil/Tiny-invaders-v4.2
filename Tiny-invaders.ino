@@ -71,9 +71,9 @@ const unsigned char PROGMEM txtPointValues[] =                       // sbr
 // GAME OVER!
 // storing the full text screen is less expensive than adressing the lines individually
 const unsigned char PROGMEM txtGameOver[] = 
-{'[','\\',']','<','=','>','[','\\',']' ,'^','_','`','a',':',';' , 0 , // sbr
-  0 , 0  , 0 ,'G','A','M','E', 0  ,'O' ,'V','E','R', 0 ,'<','=' ,'>', // sbr
- '^','_' ,'`', 0 ,'1','U','P', 0  ,'1' ,'2','3','4','5', 0 , 0  , 0 , // sbr
+{'[','\\',']','<','=','>','[','\\',']','^','_','`','a',':',';' , 0 , // sbr
+  0 , 0  , 0 ,'G','A','M','E', 0  ,'O','V','E','R', 0 ,'<','=' ,'>', // sbr
+ '^','_' ,'`', 0 ,'1','U','P', 0  , 0 , 0 , 0 , 0 , 0 , 0 , 0  , 0 , // sbr
   0 ,'a',':',';','[','\\',']','^','_' ,'`','<','=','>' ,'[','\\',']'  // sbr
 };
 // EEPROM storage address for highscore and name
@@ -191,8 +191,21 @@ NEWGAME:
   }
   
 NEWLEVEL:
-  _delay_ms(1000);
+  //_delay_ms(1000);
+
 BYPASS2:
+  // remove all monsters from the screen
+  clearMonsters( &space );          // sbr
+  // reset UFO and my shot
+  space.UFOxPos=-120;               // sbr
+  space.MyShootBall=-1;             // sbr
+  // display current level number
+  displayLevelNumber = true;        // sbr
+  Tiny_Flip( GAME_SCREEN,&space );  // sbr
+  displayLevelNumber = false;       // sbr
+  // wait a moment
+  _delay_ms(1000);                  // sbr
+
   VarResetNewLevel(&space);
   SpeedControle(&space);
   VarPot=54;
@@ -206,11 +219,12 @@ Bypass:
   ShipDead=0;
   Decompte=0;
   while(1){
-    //if (MONSTERrest==0) {
-    if (MONSTERrest <20) {
+    if (MONSTERrest==0) {
+    //if (MONSTERrest <20) {
       Sound(110,255);_delay_ms(40);Sound(130,255);_delay_ms(40);Sound(100,255);
       _delay_ms(40);Sound(1,155);_delay_ms(20);Sound(60,255);Sound(60,255);
-      memset( space.MonsterGrid, 0xff, sizeof( space.MonsterGrid ) ); 
+      //memset( space.MonsterGrid, 0xff, sizeof( space.MonsterGrid ) ); 
+      clearMonsters( &space );    // sbr
       // let the new level slide in from the right
       newLevelAnimation = true;   // sbr
       currentLevel++;             // sbr
@@ -223,13 +237,6 @@ Bypass:
         Tiny_Flip( GAME_SCREEN,&space); // sbr
       }                                 // sbr
       _delay_ms(500);                   // sbr
-
-      // display current level number
-      displayLevelNumber = true;        // sbr
-      Tiny_Flip( GAME_SCREEN,&space );  // sbr
-      displayLevelNumber = false;       // sbr
-      // wait a moment
-      _delay_ms(1000);                  // sbr
 
       // start next level
       goto NEWLEVEL;
@@ -837,9 +844,8 @@ void VarResetNewLevel(SPACE *space){
   //space->Shield[5]=255;  
   space->MonsterShoot[0]=16;
   space->MonsterShoot[1]=16;
-  space->UFOxPos=-120;
-  
-  space->MyShootBall=-1;
+  //space->UFOxPos=-120;
+  //space->MyShootBall=-1;
   //space->MyShootBallxpos=0;
   //space->MyShootBallFrame=0;
   //space->anim=0;
@@ -1009,4 +1015,11 @@ void calcNewBackgroundOffset( SPACE *space )
     }
   }
   space->ScrBackV = ( scrBackV + levelShiftOffsetX ) & 0x7f;
+}
+
+/*--------------------------------------------------------------*/
+// remove all monsters from the screen
+void clearMonsters(SPACE *space)
+{
+  memset( space->MonsterGrid, 0xff, sizeof( space->MonsterGrid ) ); 
 }

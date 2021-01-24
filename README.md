@@ -22,16 +22,15 @@ Because there were still some bytes left, I added more features ;)
 
 # New Features 
 
-* Added a score display
-* Added high score display
+* Added a score and high display
 * Added high score screen with name entry of the successful player
-  (stored bulletproof in EEPROM)
-* The intro screen switches every few seconds between TinY INVADERS and alien point values
+  (the high score is stored bulletproof in EEPROM)
+* The intro screen switches every few seconds between TinY INVADERS and alien point values table
 * Added a friendly game over screen with some aliens in it (but no animations yet).
 * Added a changing game background between the levels:
     At first I mirrored the image data on decompression, but later I found out that just using
     an x offset doesn't look much different and saves some valuable flash bytes.
-* Added comments
+* Added comments to the code
 * Reformatted original code (sorry for that, Daniel!)
 * Also some of the original routines needed to be rewritten for a smaller flash memory footprint.
 * Added compile time support for SH1106 displays: Just uncomment 
@@ -42,9 +41,10 @@ Because there were still some bytes left, I added more features ;)
   left and 2 lines garbage on the right. There is a possiblity that the display's manufacturer can choose
   how to connect the controller pins to the actual display.
 * Added a sliding animation as a transition between the levels
+* Display level number at the beginning of each new level
 
 # Current Size
-  8066 bytes (126 bytes left)
+  8142 bytes (still 50 bytes left)
 
 # Credits
 
