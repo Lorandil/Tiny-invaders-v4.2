@@ -26,14 +26,13 @@ Because there were still some bytes left, I added more features ;)
 * Added high score display
 * Added high score screen with name entry of the successful player
   (stored bulletproof in EEPROM)
-* Added a point values table which is switching with the intro screen every few seconds.
+* The intro screen switches every few seconds between TinY INVADERS and alien point values
 * Added a friendly game over screen with some aliens in it (but no animations yet).
 * Added a changing game background between the levels:
     At first I mirrored the image data on decompression, but later I found out that just using
     an x offset doesn't look much different and saves some valuable flash bytes.
-* The intro screen switches every few seconds between TinY INVADERS and alien point values
 * Added comments
-* Reformatted original code (sorry for that!)
+* Reformatted original code (sorry for that, Daniel!)
 * Also some of the original routines needed to be rewritten for a smaller flash memory footprint.
 * Added compile time support for SH1106 displays: Just uncomment 
   //#define _USE_SH1106_
