@@ -60,6 +60,7 @@ const uint8_t BLANK_SCREEN = 2; // sbr
 const unsigned char PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
 const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E','@'}; // sbr
 const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E'}; // sbr
+const unsigned char PROGMEM txtLevel[] = {'L','E','V','E','L'}; // sbr
 // Alien point values
 // storing the full text screen is less expensive than adressing the lines individually
 const unsigned char PROGMEM txtPointValues[] =                       // sbr
@@ -82,7 +83,10 @@ const uint16_t TINY_INVADERS_EEPROM_ADDR = 128; // sbr
 uint8_t Live=0;
 uint8_t ShieldRemoved=0;
 uint8_t MONSTERrest=0;
-uint8_t LEVELS=0;
+// counts from 0 to 9, used for difficulty level
+uint8_t LEVELS;/*=0;*/ // sbr
+// counts the level (not limited)
+uint8_t currentLevel;
 uint8_t SpeedShootMonster=0;
 uint8_t ShipDead=0;
 uint8_t ShipPos/*=56*/; // sbr (initialization not necessary, saves 2 bytes)
@@ -95,6 +99,8 @@ SPACE space;  // sbr
 // a new level will slide in from the right
 bool    newLevelAnimation;  // sbr
 uint8_t levelShiftOffsetX;  // sbr
+bool    displayLevelNumber; // sbr
+unsigned char currentLevelTextBuffer[3]; // sbr
 // fin var public
 
 void setup() {
@@ -157,9 +163,11 @@ NEWGAME:
   resetScore(); // sbr
   Live=3;
   LEVELS=0;
+  currentLevel = 1; // sbr
   // don't "mirror" the background
   newLevelAnimation = false;  // sbr
-  levelShiftOffsetX = 0; // sbr 
+  displayLevelNumber = false; // sbr
+  levelShiftOffsetX = 0;      // sbr 
   // clear text buffer
   clearTextBuffer();  // sbr
 
@@ -198,12 +206,15 @@ Bypass:
   ShipDead=0;
   Decompte=0;
   while(1){
-    if (MONSTERrest==0) {
+    //if (MONSTERrest==0) {
+    if (MONSTERrest <20) {
       Sound(110,255);_delay_ms(40);Sound(130,255);_delay_ms(40);Sound(100,255);
       _delay_ms(40);Sound(1,155);_delay_ms(20);Sound(60,255);Sound(60,255);
       memset( space.MonsterGrid, 0xff, sizeof( space.MonsterGrid ) ); 
       // let the new level slide in from the right
       newLevelAnimation = true;   // sbr
+      currentLevel++;             // sbr
+      // the difficulty level reaches from 0..9
       if (LEVELS<9) {LEVELS++;}
       // display new level animation
       while ( newLevelAnimation ) // sbr
@@ -212,6 +223,14 @@ Bypass:
         Tiny_Flip( GAME_SCREEN,&space); // sbr
       }                                 // sbr
       _delay_ms(500);                   // sbr
+
+      // display current level number
+      displayLevelNumber = true;        // sbr
+      Tiny_Flip( GAME_SCREEN,&space );  // sbr
+      displayLevelNumber = false;       // sbr
+      // wait a moment
+      _delay_ms(1000);                  // sbr
+
       // start next level
       goto NEWLEVEL;
     }
@@ -345,6 +364,11 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
     }
     convertValueToDigits( getScore(), getTextBuffer() + 4 ); // sbr
     convertValueToDigits( getHighScorePoints(), getTextBuffer() + 26 ); // sbr
+
+    // print LEVEL string
+    pgm_printText( 36, txtLevel, sizeof( txtLevel ) );            // sbr
+    // convert number of current level to a string
+    convertValueToDigits( currentLevel, getTextBuffer() + 42  );  // sbr
   } // sbr
 
   // just calculate the offset once
@@ -391,6 +415,15 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
                    | MYSHIELD
                    | displayText(x,y) // sbr
                  );
+                 
+        // overlay level number?
+        if ( displayLevelNumber )
+        {
+          if ( ( y >= 4 ) && ( y <= 5 ) )
+          {
+            pixels |= displayZoomedText( x, y );
+          }
+        }
       }
       // render intro screen
       else if ( render0_picture1 == INTRO_SCREEN ) {

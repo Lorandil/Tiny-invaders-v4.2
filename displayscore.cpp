@@ -126,13 +126,18 @@ void addScore( SCORE_TYPE points )
 }
 
 /*--------------------------------------------------------------*/
-// Converts 'value' to 6 decimal digits (if SCORE_TYPE equals uint16_t)
+// Converts 'value' to 5 decimal digits (if SCORE_TYPE equals uint16_t)
 // Not the most elegant version, but the shortest for uint16_t
 void convertValueToDigits( SCORE_TYPE value, uint8_t *digits )
 {
-  volatile static SCORE_TYPE dividerList[] = { 10000, 1000, 100, 10, 1, 0 };
+  static SCORE_TYPE dividerList[] = { 10000, 1000, 100, 10, 1, 0 };
 
   SCORE_TYPE *divider = dividerList;
+
+  // wait for the first divider which is smaller than the value
+  while ( *divider > value ) { divider++; }
+  // if we reach zero, the divider pointer has to be reset to '1'
+  if ( value == 0 ) { divider = &dividerList[4]; }
   
   do
   {
@@ -151,7 +156,7 @@ void convertValueToDigits( SCORE_TYPE value, uint8_t *digits )
 }
 
 /*--------------------------------------------------------------*/
-// Displays a line of ascii character from the smallFont in the 
+// Displays a line of ASCII character from the smallFont in the 
 // top line of the screen. To save flash memory, the font ranges
 // only from '0' to 'Z'.
 uint8_t displayText( uint8_t x, uint8_t y )
@@ -172,7 +177,7 @@ uint8_t displayText( uint8_t x, uint8_t y )
 }
 
 /*--------------------------------------------------------------*/
-// Display zoomed ascii character from the smallFont in four
+// Display zoomed ASCII character from the smallFont in four
 // lines of 16 characters. The zoom factor is fixed to '2'.
 // If bit 7 is set, the character will be displayed inverted.
 // To save flash memory, the font ranges only from '0' to 'Z'.
