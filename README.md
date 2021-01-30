@@ -22,7 +22,7 @@ Because there were still some bytes left, I added more features ;)
 
 # New Features 
 
-* Added a score and high display
+* Added a score and high score display
 * Added high score screen with name entry of the successful player
   (the high score is stored bulletproof in EEPROM)
 * The intro screen switches every few seconds between TinY INVADERS and alien point values table
