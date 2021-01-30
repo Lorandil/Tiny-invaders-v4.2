@@ -42,9 +42,11 @@ Because there were still some bytes left, I added more features ;)
   how to connect the controller pins to the actual display.
 * Added a sliding animation as a transition between the levels
 * Display level number at the beginning of each new level
+* If an outer column of the aliens has been eliminated, the remaining aliens will use the free space and
+  always patrol between the screen borders. Does this make the game too easy?
 
 # Current Size
-  8142 bytes (still 50 bytes left)
+  8078 bytes (still 114 bytes left)
 
 # Credits
 
