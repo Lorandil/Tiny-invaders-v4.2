@@ -76,6 +76,12 @@ const unsigned char PROGMEM txtGameOver[] =
  '^','_' ,'`', 0 ,'1','U','P', 0  , 0 , 0 , 0 , 0 , 0 , 0 , 0  , 0 , // sbr
   0 ,'a',':',';','[','\\',']','^','_' ,'`','<','=','>' ,'[','\\',']'  // sbr
 };
+const unsigned char PROGMEM txtGameOver2[] = 
+{'[','\\',']','<','=','>','[','\\',']','b','c','d','a',':',';' , 0 , // sbr
+  0 , 0  , 0 ,'G','A','M','E', 0  ,'O','V','E','R', 0 ,'<','=' ,'>', // sbr
+ '^','_' ,'`', 0 ,'1','U','P', 0  , 0 , 0 , 0 , 0 , 0 , 0 , 0  , 0 , // sbr
+  0 ,'a',':',';','[','\\',']','b','c' ,'d','<','=','>' ,'[','\\',']'  // sbr
+};
 // EEPROM storage address for highscore and name
 const uint16_t TINY_INVADERS_EEPROM_ADDR = 128; // sbr
 
@@ -128,14 +134,12 @@ void setup() {
   initHighScoreStruct( TINY_INVADERS_EEPROM_ADDR ); // sbr
 }
 
+// Changed the two-loop-copy to memcpy_P saved many bytes :)
 void LoadMonstersLevels(int8_t Levels,SPACE *space){
-  uint8_t x,y;
-  for (y=0;y<5;y++){
-    for (x=0;x<6;x++){
-      if (y!=4) {space->MonsterGrid[y][x]=pgm_read_byte(&MonstersLevels[(Levels*24)+((y)*6)+(x)]);}
-      else{space->MonsterGrid[y][x]=-1;}
-    }
-  }
+  // simply copy the monsters from flash to RAM as a block
+  memcpy_P( &space->MonsterGrid[0][0], MonstersLevels + Levels * 24, 24 );
+  // and some empty space below
+  memset( &space->MonsterGrid[4][0], -1, 6 );
 }
 
 void loop() {
@@ -165,11 +169,12 @@ NEWGAME:
   LEVELS=0;
   currentLevel = 1; // sbr
   // don't "mirror" the background
-  newLevelAnimation = false;  // sbr
-  displayLevelNumber = false; // sbr
-  levelShiftOffsetX = 0;      // sbr 
+  newLevelAnimation = false;    // sbr
+  displayLevelNumber = false;   // sbr
+  levelShiftOffsetX = 0;        // sbr 
+  clearBattleground( &space );  // sbr
   // clear text buffer
-  clearTextBuffer();  // sbr
+  clearTextBuffer();            // sbr
 
   uint16_t n = 0;
   while(1){
@@ -195,10 +200,7 @@ NEWLEVEL:
 
 BYPASS2:
   // remove all monsters from the screen
-  clearMonsters( &space );          // sbr
-  // reset UFO and my shot
-  space.UFOxPos=-120;               // sbr
-  space.MyShootBall=-1;             // sbr
+  clearBattleground( &space );      // sbr
   // display current level number
   displayLevelNumber = true;        // sbr
   Tiny_Flip( GAME_SCREEN,&space );  // sbr
@@ -224,7 +226,7 @@ Bypass:
       Sound(110,255);_delay_ms(40);Sound(130,255);_delay_ms(40);Sound(100,255);
       _delay_ms(40);Sound(1,155);_delay_ms(20);Sound(60,255);Sound(60,255);
       //memset( space.MonsterGrid, 0xff, sizeof( space.MonsterGrid ) ); 
-      clearMonsters( &space );    // sbr
+      clearBattleground( &space );    // sbr
       // let the new level slide in from the right
       newLevelAnimation = true;   // sbr
       currentLevel++;             // sbr
@@ -241,6 +243,8 @@ Bypass:
       // start next level
       goto NEWLEVEL;
     }
+    // adapt the left and right postion limit to the remaining monsters
+    calcMonsterPositionLimits( &space );
     if ((((space.MonsterGroupeYpos)+(space.MonsterFloorMax+1))==7)&&(Decompte==0)) {ShipDead=1;}
     if (SpeedShootMonster<=((9-LEVELS))) {SpeedShootMonster++;}
     else{SpeedShootMonster=0;MonsterShootGenerate(&space);}
@@ -308,13 +312,14 @@ Bypass:
 ////////////////////////////////// main end /////////////////////////////////
 
 void SpeedControle(SPACE *space){
-  uint8_t xx=00,yy=0;
   MONSTERrest=0;
-  for (yy=0;yy<=3;yy++){
-    for (xx=0;xx<=5;xx++){ 
-      if ((space->MonsterGrid[yy][xx]!=-1)&&((space->MonsterGrid[yy][xx]<=5)) ){MONSTERrest++;}
-    }
+
+  // for counting it's ok to consider the array one dimensional
+  uint8_t *grid = &space->MonsterGrid[0][0];
+  for ( uint8_t n = 0; n < 24; n++ ) {
+    if ( ( grid[n] !=-1 ) && ( ( grid[n] <=5 ) ) ){MONSTERrest++;}
   }
+
   space->frameMax=(MONSTERrest/8 );
 }
 
@@ -768,21 +773,36 @@ uint8_t Monster(uint8_t x,uint8_t y,SPACE *space){
 
 uint8_t MonsterRefreshMove(SPACE *space){
   if (space->Direction==1) {
-    if ((space->MonsterGroupeXpos<space->MonsterOffsetDroite)) {space->MonsterGroupeXpos=space->MonsterGroupeXpos+2;return 0;}
+    if ( space->MonsterGroupeXpos<space->MonsterOffsetDroite ) {
+      space->MonsterGroupeXpos=space->MonsterGroupeXpos+2;
+      return 0;
+    }
     else{
-      if (space->DecalageY8<7) {space->DecalageY8=space->DecalageY8+4;if (space->DecalageY8>7) {space->DecalageY8=7;} }
-      else{space->MonsterGroupeYpos++;space->DecalageY8=0;}
-      space->Direction=0;return 0;
+      if (space->DecalageY8<7) {
+        space->DecalageY8=space->DecalageY8+4;
+        if (space->DecalageY8>7) { space->DecalageY8=7; }
+      }
+      else {
+        space->MonsterGroupeYpos++;space->DecalageY8=0;
+      }
+      // change direction
+      space->Direction=0;
+      return 0;
     }
   }
   else{
-    if ((space->MonsterGroupeXpos>space->MonsterOffsetGauche)) {
+    if ( space->MonsterGroupeXpos>space->MonsterOffsetGauche ) {
       space->MonsterGroupeXpos=space->MonsterGroupeXpos-2;
       return 0;
     }
     else{
-      if (space->DecalageY8<7) {space->DecalageY8=space->DecalageY8+4;if (space->DecalageY8>7) {space->DecalageY8=7;} }
-      else{space->MonsterGroupeYpos++;space->DecalageY8=0;}
+      if (space->DecalageY8<7) {
+        space->DecalageY8=space->DecalageY8+4;
+        if (space->DecalageY8>7) { space->DecalageY8=7; }
+      }
+      else{
+        space->MonsterGroupeYpos++;space->DecalageY8=0;
+      }
       space->Direction=1;
       return 0;
     }
@@ -844,8 +864,8 @@ void VarResetNewLevel(SPACE *space){
   //space->Shield[5]=255;  
   space->MonsterShoot[0]=16;
   space->MonsterShoot[1]=16;
-  //space->UFOxPos=-120;
-  //space->MyShootBall=-1;
+  space->UFOxPos=-120;
+  space->MyShootBall=-1;
   //space->MyShootBallxpos=0;
   //space->MyShootBallFrame=0;
   //space->anim=0;
@@ -1005,7 +1025,8 @@ void calcNewBackgroundOffset( SPACE *space )
     levelShiftOffsetX += 4;
     // limit the offset to 0..127
     levelShiftOffsetX &= 0x7f;
-    // sliding is finished if 'levelShiftOffsetX' reaches the next base position
+    // sliding is finished if 'levelShiftOffsetX' reaches the next base position 
+    // (it's 68 because 64 didn't look good with the planet wrapping around when moving to the borders of the screen)
     if (    ( levelShiftOffsetX == 0 )
          || ( levelShiftOffsetX == 68 )
        )
@@ -1018,8 +1039,57 @@ void calcNewBackgroundOffset( SPACE *space )
 }
 
 /*--------------------------------------------------------------*/
-// remove all monsters from the screen
-void clearMonsters(SPACE *space)
+// remove all monsters, shields, explosions and shots from the screen
+void clearBattleground(SPACE *space)
 {
   memset( space->MonsterGrid, 0xff, sizeof( space->MonsterGrid ) ); 
+  memset( space->Shield, 0, sizeof( space->Shield ) );
+  // reset UFO and all shots
+  space->UFOxPos=-120;
+  space->MyShootBall=-1;
+  space->MonsterShoot[0]=16;
+  space->MonsterShoot[1]=16;
+  // center ship
+  ShipPos=56;
+}
+
+/*--------------------------------------------------------------*/
+// Calculate the left and right limits for the moving monsters 
+void calcMonsterPositionLimits( SPACE *space )
+{
+  // no valid positions found 
+  space->MonsterOffsetGauche = 127;
+  space->MonsterOffsetDroite = -128;
+
+  /*--- determine the leftmost position ---*/
+  for ( uint8_t x = 0; x < 6; x++ ) {
+    uint8_t monsterPresent = 0xff;
+    // rows
+    for ( uint8_t y = 0; y < 4; y++ ) {
+      // if any monster is present, bits will be removed
+      monsterPresent &= space->MonsterGrid[y][x];
+    }
+    // monster found?
+    if ( monsterPresent != 0xff )
+    {
+      // monster found!
+      if ( space->MonsterOffsetGauche == 127 ) { space->MonsterOffsetGauche = - ( x * 14 ); }
+    }
+  }
+
+  /*--- determine the rightmost position ---*/
+  for ( uint8_t x = 5; x > 0; --x ) {
+    uint8_t monsterPresent = 0xff;
+    // rows
+    for ( uint8_t y = 0; y < 4; y++ ) {
+      // if any monster is present, bits will be removed
+      monsterPresent &= space->MonsterGrid[y][x];
+    }
+    // monster found?
+    if ( monsterPresent != 0xff )
+    {
+      // monster found!
+      if ( space->MonsterOffsetDroite == -128 ) { space->MonsterOffsetDroite = 44 + ( 5 - x ) * 14; }
+    }
+  }
 }
