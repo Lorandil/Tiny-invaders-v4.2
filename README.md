@@ -25,7 +25,8 @@ Because there were still some bytes left, I added more features ;)
 * Added a score and high score display
 * Added high score screen with name entry of the successful player
   (the high score is stored bulletproof in EEPROM)
-* The intro screen switches every few seconds between TinY INVADERS and alien point values table
+* The intro screen switches every few seconds between TinY INVADERS, the alien point values table
+  and the high score.
 * Added a friendly game over screen with some aliens in it (but no animations yet).
 * Added a changing game background between the levels:
     At first I mirrored the image data on decompression, but later I found out that just using
@@ -38,7 +39,7 @@ Because there were still some bytes left, I added more features ;)
   at the top of Tiny-invaders.ino to get the display correctly centered on SH1106.
   The #define is necessary, because compared to the SSD1306 the SH1106 internally works with 132 bytes 
   per line. By default the centered 128 bytes (2..129) are displayed, causing two missing rows on the
-  left and 2 lines garbage on the right. There is a possiblity that the display's manufacturer can choose
+  left and 2 lines garbage on the right. There is a possibility that the display's manufacturer can choose
   how to connect the controller pins to the actual display.
 * Added a sliding animation as a transition between the levels
 * Display level number at the beginning of each new level
@@ -46,7 +47,8 @@ Because there were still some bytes left, I added more features ;)
   always patrol between the screen borders. Does this make the game too easy?
 
 # Current Size
-  8076 bytes (still 116 bytes left)
+  8158 bytes (still 34 bytes left) using the 'ATTinyCore' from Spence Konde (v1.4.1) 
+  [http://drazzy.com/package_drazzy.com_index.json]
 
 # Credits
 

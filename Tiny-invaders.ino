@@ -62,7 +62,7 @@ const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O'
 const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E'}; // sbr
 const unsigned char PROGMEM txtLevel[] = {'L','E','V','E','L'}; // sbr
 // Alien point values
-// storing the full text screen is less expensive than adressing the lines individually
+// storing the full text screen is less expensive than addressing the lines individually
 const unsigned char PROGMEM txtPointValues[] =                       // sbr
 {                    '^','_' ,'`', 0 , 0 ,'1','0', 0 , 0 , 0 , 0 ,   // sbr
   0 , 0 , 0 , 0 , 0 ,'<','=' ,'>', 0 , 0 ,'2','0', 0 , 0 , 0 , 0 ,   // sbr
@@ -173,19 +173,23 @@ NEWGAME:
   displayLevelNumber = false;   // sbr
   levelShiftOffsetX = 0;        // sbr 
   clearBattleground( &space );  // sbr
-  // clear text buffer
-  clearTextBuffer();            // sbr
 
   uint16_t n = 0;
   while(1){
-
-    if ( n++ < 250 )
+    // clear text buffer
+    clearTextBuffer();            // sbr
+    
+    if ( n++ < 20 )
     {
       showIntroScreen( &space );  // sbr
     }
-    else if ( n < 500 )
+    else if ( n < 30 )
     {
       showPointValues( &space );
+    }
+    else if ( n < 40 )
+    {
+      showHighScore( &space );
     }
     else
     {
@@ -193,6 +197,8 @@ NEWGAME:
     }
     // exit if button pressed
     if (digitalRead( FIRE_BUTTON )==0) {bebeep(); goto BYPASS2;} // sbr
+    // take a nap to save battery
+    _delay_ms( 200 );
   }
   
 NEWLEVEL:
@@ -1008,6 +1014,29 @@ void showPointValues( SPACE *space )
 
   // display!
   Tiny_Flip( BLANK_SCREEN, space);
+}
+
+/*--------------------------------------------------------------*/
+// [The parameter 'space' isn't really necessary here, a NULL pointer
+//  would do for 'Tiny_Flip()', but when the compiler inlines the code, 
+//  this version saves 2 bytes]
+void showHighScore( SPACE *space )
+{
+  // just a simple 'GAME OVER!' screen with some aliens
+  pgm_printText( 0, txtGameOver, sizeof( txtGameOver ) );
+  
+  // replace 'GAME OVER!' with ' HISCORE '
+  pgm_printText( 1 * 16 + 3, txtNewHiScore + 3, sizeof( txtNewHiScore ) - 3 );
+  // remove the '!'
+  uint8_t *textBuffer = getTextBuffer();
+  textBuffer[1 * 16 + 11] = 0;
+
+  // print player name
+  printText( 2 * 16 + 4, getHighScoreName(), 3 );
+  // print high score
+  convertValueToDigits( getHighScorePoints(), textBuffer + 2 * 16 + 8 ); 
+  // display!
+  Tiny_Flip( BLANK_SCREEN,space);
 }
 
 /*--------------------------------------------------------------*/
