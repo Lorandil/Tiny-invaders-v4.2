@@ -46,7 +46,7 @@ Because there were still some bytes left, I added more features ;)
   always patrol between the screen borders. Does this make the game too easy?
 
 # Current Size
-  8078 bytes (still 114 bytes left)
+  8076 bytes (still 116 bytes left)
 
 # Credits
 

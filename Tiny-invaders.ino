@@ -873,8 +873,9 @@ void VarResetNewLevel(SPACE *space){
   //space->PositionDansGrilleMonsterX=0;
   //space->PositionDansGrilleMonsterY=0;
   space->MonsterFloorMax=3;
-  //space->MonsterOffsetGauche=0;
-  space->MonsterOffsetDroite=44;
+  // left and right offsets will be calculated before each frame
+  //space->MonsterOffsetGauche=0;  // sbr
+  //space->MonsterOffsetDroite=44; // sbr
   space->MonsterGroupeXpos=20;
   if (LEVELS>3) {space->MonsterGroupeYpos=1;}else{space->MonsterGroupeYpos=0;}
   //space->DecalageY8=0;
@@ -1062,10 +1063,10 @@ void calcMonsterPositionLimits( SPACE *space )
   space->MonsterOffsetDroite = -128;
 
   /*--- determine the leftmost position ---*/
-  for ( uint8_t x = 0; x < 6; x++ ) {
+  for ( int8_t x = 0; x < 6; x++ ) {
     uint8_t monsterPresent = 0xff;
     // rows
-    for ( uint8_t y = 0; y < 4; y++ ) {
+    for ( int8_t y = 0; y < 4; y++ ) {
       // if any monster is present, bits will be removed
       monsterPresent &= space->MonsterGrid[y][x];
     }
@@ -1078,7 +1079,7 @@ void calcMonsterPositionLimits( SPACE *space )
   }
 
   /*--- determine the rightmost position ---*/
-  for ( uint8_t x = 5; x > 0; --x ) {
+  for ( int8_t x = 5; x >= 0; --x ) {
     uint8_t monsterPresent = 0xff;
     // rows
     for ( uint8_t y = 0; y < 4; y++ ) {
