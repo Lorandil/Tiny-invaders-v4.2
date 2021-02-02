@@ -50,6 +50,8 @@ Because there were still some bytes left, I added more features ;)
   8158 bytes (still 34 bytes left) using the 'ATTinyCore' from Spence Konde (v1.4.1) 
   [https://github.com/SpenceKonde/ATTinyCore]
 
+[https://github.com/Lorandil/Tiny-invaders-v4.2/TinyJoystickRelease/ATTinyCore settings for ATtiny85.png]
+
 # Credits
 
 I really want to thank Daniel from Électro L.I.B for his great work in the TinyJoypad project.
