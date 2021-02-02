@@ -48,7 +48,7 @@ Because there were still some bytes left, I added more features ;)
 
 # Current Size
   8158 bytes (still 34 bytes left) using the 'ATTinyCore' from Spence Konde (v1.4.1) 
-  [http://drazzy.com/package_drazzy.com_index.json]
+  [https://github.com/SpenceKonde/ATTinyCore]
 
 # Credits
 
