@@ -47,10 +47,10 @@ Because there were still some bytes left, I added more features ;)
   always patrol between the screen borders. Does this make the game too easy?
 
 # Current Size
-  8158 bytes (still 34 bytes left) using the 'ATTinyCore' from Spence Konde (v1.4.1) 
+  8158 bytes (still 34 bytes left) using the marvelous 'ATTinyCore' from Spence Konde (v1.4.1) 
   [https://github.com/SpenceKonde/ATTinyCore]
   
-  Please use these settings: [https://github.com/Lorandil/Tiny-invaders-v4.2/TinyJoystickRelease/ATTinyCore_settings_for_ATtiny85.png] to get the size below 8192 bytes ;)
+  Please use the settings from ATTinyCore_settings_for_ATtiny85.png to get the size below 8192 bytes ;)
 
 # Credits
 
