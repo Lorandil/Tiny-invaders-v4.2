@@ -1,7 +1,7 @@
 //   >>>>>  T-I-N-Y  I-N-V-A-D-E-R-S v3.0 for ATTINY85  GPLv3 <<<<
 //						Tinyjoypad rev2 compatible
 //                   Programmer: Daniel C 2018-2020
-//                   Enhancements: Sven B 2020
+//                   Enhancements: Sven B 2021
 //              Contact EMAIL: electro_l.i.b@tinyjoypad.com
 //                    https://www.tinyjoypad.com
 //         https://sites.google.com/view/arduino-collection
@@ -25,6 +25,10 @@
 // optional support for SH1106 displays (shifted output)
 //#define _USE_SH1106_
 
+// Uncomment the following line if the resulting code exceeds the flash size.
+// You will lose the high score being displayed during the title loop.
+//#define _REDUCE_FLASH_MEMORY_FOOTPRINT
+
 #if defined(__AVR_ATtiny85__) // sbr
   #define LEFT_RIGHT_BUTTON A0
   #define UP_DOWN_BUTTON    A3
@@ -37,7 +41,7 @@
   #define UP_DOWN_BUTTON    A3
   #define FIRE_BUTTON       A1
   // Classic Adafruit library works on many controllers, but not SH1106.
-  // Perhaps I will change to another library...
+  // Perhaps I will switch to another library...
   #include <Adafruit_SSD1306.h>
   Adafruit_SSD1306 display( 128, 64, &Wire, -1 );
 #endif
@@ -75,12 +79,6 @@ const unsigned char PROGMEM txtGameOver[] =
   0 , 0  , 0 ,'G','A','M','E', 0  ,'O','V','E','R', 0 ,'<','=' ,'>', // sbr
  '^','_' ,'`', 0 ,'1','U','P', 0  , 0 , 0 , 0 , 0 , 0 , 0 , 0  , 0 , // sbr
   0 ,'a',':',';','[','\\',']','^','_' ,'`','<','=','>' ,'[','\\',']'  // sbr
-};
-const unsigned char PROGMEM txtGameOver2[] = 
-{'[','\\',']','<','=','>','[','\\',']','b','c','d','a',':',';' , 0 , // sbr
-  0 , 0  , 0 ,'G','A','M','E', 0  ,'O','V','E','R', 0 ,'<','=' ,'>', // sbr
- '^','_' ,'`', 0 ,'1','U','P', 0  , 0 , 0 , 0 , 0 , 0 , 0 , 0  , 0 , // sbr
-  0 ,'a',':',';','[','\\',']','b','c' ,'d','<','=','>' ,'[','\\',']'  // sbr
 };
 // EEPROM storage address for highscore and name
 const uint16_t TINY_INVADERS_EEPROM_ADDR = 128; // sbr
@@ -174,7 +172,7 @@ NEWGAME:
   levelShiftOffsetX = 0;        // sbr 
   clearBattleground( &space );  // sbr
 
-  uint16_t n = 0;
+  uint8_t n = 0;
   while(1){
     // clear text buffer
     clearTextBuffer();            // sbr
@@ -183,14 +181,16 @@ NEWGAME:
     {
       showIntroScreen( &space );  // sbr
     }
-    else if ( n < 30 )
+    else if ( n < 35 )
     {
       showPointValues( &space );
     }
-    else if ( n < 40 )
+  #ifndef _REDUCE_FLASH_MEMORY_FOOTPRINT    
+    else if ( n < 50 )
     {
       showHighScore( &space );
     }
+  #endif
     else
     {
       n = 0;
@@ -526,7 +526,7 @@ void MonsterShootupdate(SPACE *space){
 void MonsterShootGenerate(SPACE *space){ 
   uint8_t a=random()%3; 
   uint8_t b=random()%6; 
-  if (b>=5) {b=5;}
+  //if (b>=5) {b=5;}  // sbr
   if (space->MonsterShoot[1]==16) {  
     if (space->MonsterGrid[a][b]!=-1) {
       space->MonsterShoot[0]=(space->MonsterGroupeXpos+7)+(b*14);
@@ -540,6 +540,10 @@ uint8_t MonsterShoot(uint8_t x,uint8_t y,SPACE *space){
     if (((space->MonsterShoot[1])%2)==0) {return 0b00001111;}
     else{return 0b11110000;}
   }
+  //if ((((space->MonsterShoot[1])/2)==y)&&(space->MonsterShoot[0]==x) ) {
+  //  if (((space->MonsterShoot[1])%2)==0) {return 0b00001111;}
+  //  else{return 0b11110000;}
+  //}
   return 0x00;
 }
 
@@ -1016,6 +1020,7 @@ void showPointValues( SPACE *space )
   Tiny_Flip( BLANK_SCREEN, space);
 }
 
+#ifndef _REDUCE_FLASH_MEMORY_FOOTPRINT
 /*--------------------------------------------------------------*/
 // [The parameter 'space' isn't really necessary here, a NULL pointer
 //  would do for 'Tiny_Flip()', but when the compiler inlines the code, 
@@ -1038,6 +1043,7 @@ void showHighScore( SPACE *space )
   // display!
   Tiny_Flip( BLANK_SCREEN,space);
 }
+#endif
 
 /*--------------------------------------------------------------*/
 // Calculate the backgound offset to get the background a little
