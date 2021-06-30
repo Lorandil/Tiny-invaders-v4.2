@@ -127,6 +127,8 @@ void setup() {
   pinMode( LEFT_RIGHT_BUTTON, INPUT );
   pinMode( UP_DOWN_BUTTON, INPUT );
   pinMode( FIRE_BUTTON, INPUT );
+  // configure PB4 as output (Pin D12 on Arduino UNO R3 and Pin D10 on Arduino Mega 2560 )
+  DDRB |= ( 1 << PB4 );
 #endif
   // restore highscore from EEPROM
   initHighScoreStruct( TINY_INVADERS_EEPROM_ADDR ); // sbr

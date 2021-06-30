@@ -55,15 +55,15 @@ const uint8_t  characterFont3x5[] PROGMEM = {
   0b00111110,
   0b00000000,
   // ';' - UFO center
-  0b00111100, // 0x78 ror 1
-  0b00101100, // 0x58 ror 1
-  0b00101100, // 0x58 ror 1
-  0b00111100, // 0x78 ror 1
+  0b00011110, // 0x78 ror 2
+  0b00010110, // 0x58 ror 2
+  0b00010110, // 0x58 ror 2
+  0b00011110, // 0x78 ror 2
   // ':' - UFO right
-  0b00101000, // 0x50 ror 1
-  0b01111000, // 0xF0 ror 1
-  0b00110000, // 0x60 ror 1
-  0b00100000, // 0x40 ror 1
+  0b00010100, // 0x50 ror 2
+  0b00111100, // 0xF0 ror 2
+  0b00011000, // 0x60 ror 2
+  0b00010000, // 0x40 ror 2
   // '<' : Alien 2 left
   0b01110000, // 0x70
   0b00011000, // 0x18
@@ -250,10 +250,10 @@ const uint8_t  characterFont3x5[] PROGMEM = {
   0b10011110, // 0x9E
   0b10011100, // 0x9C
   // a - UFO left
-  0b00100000, // 0x40 ror 1
-  0b00110000, // 0x60 ror 1
-  0b01111000, // 0xF0 ror 1
-  0b00101000, // 0x50 ror 1
+  0b00010000, // 0x40 ror 2
+  0b00011000, // 0x60 ror 2
+  0b00111100, // 0xF0 ror 2
+  0b00010100, // 0x50 ror 2
 #if 0  
   // b - Alien 1 left - phase 2
   0b00011100, // 0x1C

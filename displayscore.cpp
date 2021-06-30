@@ -193,7 +193,7 @@ uint8_t displayZoomedText( uint8_t x, uint8_t y )
     uint8_t reverse = value & 0x80;
     // remove MSB from value
     value -= reverse;
-    // return the column value (move the font 1 pixel down, lowest pixel returns at the top)
+    // return the column value
     value = ( pgm_read_byte( characterFont3x5 + ( ( value - '0' ) << 2 ) + ( ( x >> 1 ) & 0x03 ) ) );
     if ( ( y & 0x01 ) == 0 )
     {
