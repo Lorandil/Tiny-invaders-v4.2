@@ -29,22 +29,7 @@
 // You will lose the high score being displayed during the title loop.
 //#define _REDUCE_FLASH_MEMORY_FOOTPRINT
 
-#if defined(__AVR_ATtiny85__) // sbr
-  #define LEFT_RIGHT_BUTTON A0
-  #define UP_DOWN_BUTTON    A3
-  #define FIRE_BUTTON        1
-  // fast library - but only works on ATTiny85
-  #include <ssd1306xled.h>
-#else
-  // Arduino UNO or Mega2560 or ...
-  #define LEFT_RIGHT_BUTTON A0
-  #define UP_DOWN_BUTTON    A3
-  #define FIRE_BUTTON       A1
-  // Classic Adafruit library works on many controllers, but not SH1106.
-  // Perhaps I will switch to another library...
-  #include <Adafruit_SSD1306.h>
-  Adafruit_SSD1306 display( 128, 64, &Wire, -1 );
-#endif
+#include "tinyJoypadUtils.h"  // sbr
 #include "spritebank.h"
 #include "displayscore.h" // sbr
 #include "RLEdecompression.h" // sbr
@@ -108,28 +93,10 @@ unsigned char currentLevelTextBuffer[3]; // sbr
 // fin var public
 
 void setup() {
-#if defined(__AVR_ATtiny85__)
-  SSD1306.ssd1306_init();
-  // not using 'pinMode()' here saves ~100 bytes of flash!
-  // configure A0, A3 and D1 as input
-  DDRB &= ~( ( 1 << PB5) | ( 1 << PB3 ) | ( 1 << PB1 ) );
-  // configure A2 as output
-  DDRB |= ( 1 << PB4 );
-#else
-  // DEBUG version on controller with serial ports
-  Serial.begin( 115200 );
-  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;); // Don't proceed, loop forever
-  }
-  // use 'pinMode()' for simplicity's sake... any other micro controller has enough flash :)
-  pinMode( LEFT_RIGHT_BUTTON, INPUT );
-  pinMode( UP_DOWN_BUTTON, INPUT );
-  pinMode( FIRE_BUTTON, INPUT );
-  // configure PB4 as output (Pin D12 on Arduino UNO R3 and Pin D10 on Arduino Mega 2560 )
-  DDRB |= ( 1 << PB4 );
-#endif
+  // initialize the pins (and serial port if present)
+  InitTinyJoypad();
+  // perform display initialization
+  InitDisplay();
   // restore highscore from EEPROM
   initHighScoreStruct( TINY_INVADERS_EEPROM_ADDR ); // sbr
 }
@@ -400,24 +367,8 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
     // uncompress chunk and save next address
     render = pgm_RLEdecompress( render, chunkBuffer, 128 ); // sbr
 
-#if defined(__AVR_ATtiny85__)
-    // initialize image transfer to segment 'y'
-    SSD1306.ssd1306_send_command(0xb0 + y);
-  #ifdef _USE_SH1106_
-    // SH1106 internally uses 132 pixels/line,
-    // output is (mostly?) centered, so we need to start at position 2
-    SSD1306.ssd1306_send_command(0x02);
-    SSD1306.ssd1306_send_command(0x10);  
-  #else
-    // classic SSD1306 supports only 128 pixels/line, so we start at 0
-    SSD1306.ssd1306_send_command(0x00);
-    SSD1306.ssd1306_send_command(0x10);  
-  #endif    
-    SSD1306.ssd1306_send_data_start();
-#else
-  // allocate a buffer in RAM
-  uint8_t *buffer = display.getBuffer() + y * 128;
-#endif
+    // prepare display of row <y>
+    TinyFlip_PrepareDisplayRow( y );
     
     for (x = 0; x < 128; x++)
     {
@@ -453,11 +404,8 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
       else {
         pixels = displayZoomedText(x,y);        
       }
-      #if defined(__AVR_ATtiny85__)
-        SSD1306.ssd1306_send_byte( pixels ); // sbr
-      #else
-        *buffer++ = pixels;
-      #endif
+      // send 8 vertical pixels to the display
+      TinyFlip_SendPixels( pixels );
     } // for x
     
     if (render0_picture1 == GAME_SCREEN) {
@@ -468,11 +416,8 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
       }
     }
 
-  #if defined(__AVR_ATtiny85__)
-    // this line appears to be optional, as it was never called during the intro screen...
-    // but hey, we still have some bytes left ;)
-    SSD1306.ssd1306_send_data_stop(); // sbr
-  #endif
+    // this row has been finished
+    TinyFlip_FinishDisplayRow();
   } // for y
   
   if (render0_picture1 == GAME_SCREEN) {
@@ -486,9 +431,8 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
     }
   }
 
-#if !defined(__AVR_ATtiny85__)
-  display.display();
-#endif
+  // display the whole screen
+  TinyFlip_DisplayBuffer();
 }
 
 uint8_t UFOWrite(uint8_t x,uint8_t y,SPACE *space){
@@ -822,42 +766,6 @@ uint8_t MonsterRefreshMove(SPACE *space){
 }
 
 /*-------------------------------------------------------*/
-void _variableDelay_us( uint8_t delayValue )
-{
-  while ( delayValue-- != 0 )
-  {
-    _delay_us( 1 );
-  }
-}
-
-/*-------------------------------------------------------*/
-// Code optimization by sbr
-void Sound( const uint8_t freq, const uint8_t dur )
-{
-  for ( uint8_t t = 0; t < dur; t++ )
-  {
-    if ( freq!=0 ){ PORTB = PORTB|0b00010000; }
-    _variableDelay_us( 255 - freq );
-    PORTB = PORTB&0b11101111;
-    _variableDelay_us( 255 - freq );
-  }
-}
-
-void pgm_playSound( uint8_t *soundTable, uint8_t count )
-{
-  while ( count > 0 )
-  {
-    // play a sound
-    uint8_t freq = pgm_read_byte( soundTable++ );
-    uint8_t dur = pgm_read_byte( soundTable++ );
-    Sound( freq, dur );
-    // wait some time
-    uint8_t delay10ms = pgm_read_byte( soundTable++ );
-    while ( delay10ms != 0 ) { _delay_ms( 10 ); delay10ms--; }
-    // one more played
-    count--;
-  }
-}
 
 void VarResetNewLevel(SPACE *space){
   ShieldRemoved=0;

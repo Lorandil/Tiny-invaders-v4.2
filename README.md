@@ -47,7 +47,7 @@ Because there were still some bytes left, I added more features ;)
   always patrol between the screen borders. Does this make the game too easy?
 
 # Current Size
-  8158 bytes (still 34 bytes left) using the marvelous 'ATTinyCore' from Spence Konde (v1.5.2) 
+  8070 bytes (still 122 bytes left) using the marvelous 'ATTinyCore' from Spence Konde (v1.5.2) 
   [https://github.com/SpenceKonde/ATTinyCore]
   
   Please use the settings from ATTinyCore_settings_for_ATtiny85.png to get the size below 8192 bytes ;)
