@@ -101,7 +101,7 @@ void setup() {
   initHighScoreStruct( TINY_INVADERS_EEPROM_ADDR ); // sbr
 }
 
-// Changed the two-loop-copy to memcpy_P saved many bytes :)
+// Changing the two-loop-copy to memcpy_P saved many bytes :)
 void LoadMonstersLevels(int8_t Levels,SPACE *space){
   // simply copy the monsters from flash to RAM as a block
   memcpy_P( &space->MonsterGrid[0][0], MonstersLevels + Levels * 24, 24 );
