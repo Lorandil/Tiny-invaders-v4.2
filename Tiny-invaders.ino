@@ -22,9 +22,6 @@
 //the code work at 16MHZ internal
 //and use ssd1306xled Library for SSD1306 oled display 128x64
 
-// optional support for SH1106 displays (shifted output)
-//#define _USE_SH1106_
-
 // Uncomment the following line if the resulting code exceeds the flash size.
 // You will lose the high score being displayed during the title loop.
 //#define _REDUCE_FLASH_MEMORY_FOOTPRINT
