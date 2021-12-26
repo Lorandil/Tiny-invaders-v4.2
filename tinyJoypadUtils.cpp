@@ -23,6 +23,14 @@
   #endif
 #endif
 
+// define the port for the buzzer
+#if defined(__AVR_ATtiny85__)
+  #define SOUNDPORT PORTB
+  #define SOUNDPIN  4
+#else
+  #define SOUNDPORT PORTB
+  #define SOUNDPIN  0
+#endif
 
 /*-------------------------------------------------------*/
 // function for initializing the TinyJoypad (ATtiny85) and other microcontrollers
@@ -112,9 +120,9 @@ void Sound( const uint8_t freq, const uint8_t dur )
 {
   for ( uint8_t t = 0; t < dur; t++ )
   {
-    if ( freq!=0 ){ PORTB = PORTB|0b00010000; }
+    if ( freq!=0 ){ SOUNDPORT = SOUNDPORT | (1 << SOUNDPIN ); }
     _variableDelay_us( 255 - freq );
-    PORTB = PORTB&0b11101111;
+    SOUNDPORT = SOUNDPORT & ~( 1 << SOUNDPIN );
     _variableDelay_us( 255 - freq );
   }
 }

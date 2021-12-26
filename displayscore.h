@@ -1,12 +1,13 @@
-#ifndef _DISPLAYSCORE_H_
-#define _DISPLAYSCORE_H_
+#pragma once
+
+#include <Arduino.h>
 
 typedef uint16_t SCORE_TYPE;
 
 typedef struct {
   SCORE_TYPE score;
-  char     name[3];
-  uint8_t  crcFix;
+  char       name[3];
+  uint8_t    crcFix;
 } HISCORE;
 
 // declare 'volatile' otherwise the performance might decrease dramatically
@@ -30,7 +31,7 @@ SCORE_TYPE __attribute__ ((noinline)) getHighScorePoints();
 uint8_t __attribute__ ((noinline)) calcHighScoreCRC();
 // Attention: The returned string has a fixed size of 3 bytes 
 // and is *not* terminated with zero!
-uint8_t __attribute__ ((noinline))*getHighScoreName();
+char __attribute__ ((noinline))*getHighScoreName();
 
 // EEPROM functions
 void __attribute__ ((noinline)) initHighScoreStruct( uint16_t gameAddr );
@@ -43,8 +44,6 @@ void __attribute__ ((noinline)) convertValueToDigits( SCORE_TYPE value, uint8_t 
 uint8_t displayText( uint8_t x,uint8_t y );
 uint8_t displayZoomedText( uint8_t x, uint8_t y );
 void __attribute__ ((noinline)) clearTextBuffer();
-void printText( uint8_t x, uint8_t *text, uint8_t textLength );
-void __attribute__ ((noinline)) pgm_printText( uint8_t x, uint8_t *text, uint8_t textLength );
+void printText( uint8_t x, const uint8_t *text, uint8_t textLength );
+void __attribute__ ((noinline)) pgm_printText( uint8_t x, const uint8_t *text, uint8_t textLength );
 uint8_t *getTextBuffer();
-
-#endif

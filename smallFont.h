@@ -1,8 +1,10 @@
-#ifndef _SMALLFONT_H_
-#define _SMALLFONT_H_
+#pragma once
 
 // Small 3x5 charachter font - ok, it's 4x8 ;)
 // Modified ASCII-like code page: '0'-'9','!?','A'-'Z' and some alien/UFO parts :)
+
+#include <Arduino.h>
+
 const uint8_t  characterFont3x5[] PROGMEM = {
   // 0
   0b00111100,
@@ -292,5 +294,3 @@ const uint8_t  nibbleZoom[] PROGMEM = {
   0b11111100, // 0b1110
   0b11111111, // 0b1111
 };
-
-#endif

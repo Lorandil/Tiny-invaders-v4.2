@@ -43,20 +43,20 @@ const uint8_t BLANK_SCREEN = 2; // sbr
 // The strange text definitions as arrays of chars were done 
 // - to save the terminating zero a string definition would cause ;)
 // - to change <space> to 0x00
-const unsigned char PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
-const unsigned char PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E','@'}; // sbr
-const unsigned char PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E'}; // sbr
-const unsigned char PROGMEM txtLevel[] = {'L','E','V','E','L'}; // sbr
+const uint8_t PROGMEM txtOneUp[] = {'1','U','P'}; // sbr
+const uint8_t PROGMEM txtNewHiScore[] = {'N','E','W',0,'H','I','S','C','O','R','E','@'}; // sbr
+const uint8_t PROGMEM txtEnterName[] = {'E','N','T','E','R',0,'Y','O','U','R',0,'N','A','M','E'}; // sbr
+const uint8_t PROGMEM txtLevel[] = {'L','E','V','E','L'}; // sbr
 // Alien point values
 // storing the full text screen is less expensive than addressing the lines individually
-const unsigned char PROGMEM txtPointValues[] =                       // sbr
+const uint8_t PROGMEM txtPointValues[] =                       // sbr
 {                    '^','_' ,'`', 0 , 0 ,'1','0', 0 , 0 , 0 , 0 ,   // sbr
   0 , 0 , 0 , 0 , 0 ,'<','=' ,'>', 0 , 0 ,'2','0', 0 , 0 , 0 , 0 ,   // sbr
   0 , 0 , 0 , 0 , 0 ,'[','\\',']', 0 , 0 ,'4','0', 0 , 0 , 0 , 0 ,   // sbr
   0 , 0 , 0 , 0 , 0 ,'a',':' ,';', 0 , 0 ,'?','?'                 }; // sbr
 // GAME OVER!
 // storing the full text screen is less expensive than adressing the lines individually
-const unsigned char PROGMEM txtGameOver[] = 
+const uint8_t PROGMEM txtGameOver[] = 
 {'[','\\',']','<','=','>','[','\\',']','^','_','`','a',':',';' , 0 , // sbr
   0 , 0  , 0 ,'G','A','M','E', 0  ,'O','V','E','R', 0 ,'<','=' ,'>', // sbr
  '^','_' ,'`', 0 ,'1','U','P', 0  , 0 , 0 , 0 , 0 , 0 , 0 , 0  , 0 , // sbr
@@ -287,7 +287,7 @@ void SpeedControle(SPACE *space){
   MONSTERrest=0;
 
   // for counting it's ok to consider the array one dimensional
-  uint8_t *grid = &space->MonsterGrid[0][0];
+  int8_t *grid = &space->MonsterGrid[0][0];
   for ( uint8_t n = 0; n < 24; n++ ) {
     if ( ( grid[n] !=-1 ) && ( ( grid[n] <=5 ) ) ){MONSTERrest++;}
   }

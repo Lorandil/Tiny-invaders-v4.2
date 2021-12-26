@@ -66,7 +66,7 @@ uint8_t calcHighScoreCRC()
 /*--------------------------------------------------------------*/
 // Attention: The returned string has a fixed size of 3 bytes 
 // and is *not* terminated with zero!
-uint8_t *getHighScoreName()
+char *getHighScoreName()
 {
   return( _hiScore.name );
 }
@@ -225,13 +225,13 @@ void clearTextBuffer()
 }
 
 /*--------------------------------------------------------------*/
-void printText( uint8_t x, uint8_t *text, uint8_t textLength )
+void printText( uint8_t x, const uint8_t *text, uint8_t textLength )
 {
   memcpy( textBuffer + x, text, textLength );
 }
 
 /*--------------------------------------------------------------*/
-void pgm_printText( uint8_t x, uint8_t *text, uint8_t textLength )
+void pgm_printText( uint8_t x, const uint8_t *text, uint8_t textLength )
 {
   memcpy_P( textBuffer + x, text, textLength );
 }
