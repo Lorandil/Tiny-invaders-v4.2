@@ -213,7 +213,7 @@ uint8_t displayZoomedText( uint8_t x, uint8_t y )
     }
   }
 
-  // Please move along, there is nothing to be seen here... (value is '0')
+  // Please move along, there is nothing to be seen here... 
   return( value );
 }
 
