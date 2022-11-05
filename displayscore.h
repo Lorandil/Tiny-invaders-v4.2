@@ -15,10 +15,6 @@ typedef struct {
 // with the score).
 volatile static HISCORE _hiScore;
 
-// Video text memory:
-// - one line (of 32 characters) in standard mode,
-// - four lines (of 16 characters) in zoomed mode
-static uint8_t textBuffer[64];
 static SCORE_TYPE score;
 
 void resetScore();

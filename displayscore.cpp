@@ -4,6 +4,11 @@
 #include "smallFont.h"
 #include <EEPROM.h>
 
+// Video text memory:
+// - one line (of 32 characters) in standard mode,
+// - four lines (of 16 characters) in zoomed mode
+static uint8_t textBuffer[64];
+
 const uint8_t HISCORE_MAGIC = 42;
 
 /*--------------------------------------------------------------*/
