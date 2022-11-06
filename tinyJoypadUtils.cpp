@@ -23,14 +23,10 @@
   #endif
 #endif
 
-// define the port for the buzzer
-#if defined(__AVR_ATtiny85__)
-  #define SOUNDPORT PORTB
-  #define SOUNDPIN  4
-#else
-  #define SOUNDPORT PORTB
-  #define SOUNDPIN  0
-#endif
+// buffered analog joystick inputs
+uint16_t analogJoystickX;
+uint16_t analogJoystickY;
+
 
 /*-------------------------------------------------------*/
 // function for initializing the TinyJoypad (ATtiny85) and other microcontrollers
@@ -39,16 +35,16 @@ void InitTinyJoypad()
 #if defined(__AVR_ATtiny85__)
   // not using 'pinMode()' here saves ~100 bytes of flash!
   // configure A0, A3 and D1 as input
-  DDRB &= ~( ( 1 << PB5) | ( 1 << PB3 ) | ( 1 << PB1 ) );
-  // configure A2 (aka PB4) as output
-  DDRB |= ( 1 << PB4 );
+  SOUND_PORT_DDR &= ~( ( 1 << PB5) | ( 1 << PB3 ) | ( 1 << PB1 ) );
+  // configure A2 (aka SOUND_PIN) as output
+  SOUND_PORT_DDR |= ( 1 << SOUND_PIN );
 #else
   // use 'pinMode()' for simplicity's sake... any other micro controller has enough flash :)
   pinMode( LEFT_RIGHT_BUTTON, INPUT );
   pinMode( UP_DOWN_BUTTON, INPUT );
   pinMode( FIRE_BUTTON, INPUT );
-  // configure PB4 as output (Pin D12 on Arduino UNO R3 and Pin D10 on Arduino Mega 2560 )
-  DDRB |= ( 1 << PB4 );
+  // configure SOUND_PIN as output (Pin D12 on Arduino UNO R3 and Pin D10 on Arduino Mega 2560 )
+  SOUND_PORT_DDR |= ( 1 << SOUND_PIN );
 
   // prepare serial port for debugging output
   Serial.begin( 115200 );
@@ -105,7 +101,51 @@ void waitUntilButtonsReleased( const uint8_t delay )
 }
 
 /*-------------------------------------------------------*/
-void _variableDelay_us( uint8_t delayValue )
+// read analog joystick inputs into internal variables
+void readAnalogJoystick()
+{
+  analogJoystickX = analogRead( LEFT_RIGHT_BUTTON );
+  analogJoystickY = analogRead( UP_DOWN_BUTTON );
+}
+
+/*-------------------------------------------------------*/
+bool wasLeftPressed()
+{
+  return( ( analogJoystickX >= 750 ) && ( analogJoystickX < 950 ) );
+}
+
+/*-------------------------------------------------------*/
+bool wasRightPressed()
+{
+  return( ( analogJoystickX > 500 ) && ( analogJoystickX < 750 ) );
+}
+
+/*-------------------------------------------------------*/
+bool wasUpPressed()
+{
+  return( ( analogJoystickY > 500 ) && ( analogJoystickY < 750 ) );
+}
+
+/*-------------------------------------------------------*/
+bool wasDownPressed()
+{
+  return( ( analogJoystickY >= 750 ) && ( analogJoystickY < 950 ) );
+}
+
+/*-------------------------------------------------------*/
+uint16_t getAnalogValueX()
+{
+  return( analogJoystickX );
+}
+
+/*-------------------------------------------------------*/
+uint16_t getAnalogValueY()
+{
+  return( analogJoystickY );
+}
+
+/*-------------------------------------------------------*/
+void __attribute__ ((noinline)) _variableDelay_us( uint8_t delayValue )
 {
   while ( delayValue-- != 0 )
   {
@@ -120,9 +160,9 @@ void Sound( const uint8_t freq, const uint8_t dur )
 {
   for ( uint8_t t = 0; t < dur; t++ )
   {
-    if ( freq!=0 ){ SOUNDPORT = SOUNDPORT | (1 << SOUNDPIN ); }
+    if ( freq!=0 ){ SOUND_PORT = SOUND_PORT | ( 1 << SOUND_PIN); }
     _variableDelay_us( 255 - freq );
-    SOUNDPORT = SOUNDPORT & ~( 1 << SOUNDPIN );
+    SOUND_PORT = SOUND_PORT & ~( 1 << SOUND_PIN );
     _variableDelay_us( 255 - freq );
   }
 }
@@ -137,7 +177,8 @@ void InitDisplay()
   // Address 0x3D for 128x64
   if( !display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
   { 
-    Serial.println(F("SSD1306 allocation failed")); for(;;);
+    // extended the error message
+    Serial.println(F("SSD1306 allocation failed - 1024 bytes for frame buffer required!")); for(;;);
   }
 #endif
 }
@@ -242,5 +283,72 @@ void TinyFlip_CheckForSerialScreenshot()
       TinyFlip_SerialScreenshot();
     }
   #endif
+#endif
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// serial output without clustering the code with #if !defined(__AVR_ATtiny85__)...
+
+/*-------------------------------------------------------*/
+void serialPrint( const char *text )
+{
+#ifdef USE_SERIAL_PRINT
+  Serial.print( text );
+#endif
+}
+
+/*-------------------------------------------------------*/
+void serialPrintln( const char *text )
+{
+#ifdef USE_SERIAL_PRINT
+  Serial.println( text );
+#endif
+}
+
+/*-------------------------------------------------------*/
+void serialPrint( const __FlashStringHelper *text )
+{
+#ifdef USE_SERIAL_PRINT
+  Serial.print( text );
+#endif
+}
+
+/*-------------------------------------------------------*/
+void serialPrintln( const __FlashStringHelper *text )
+{
+#ifdef USE_SERIAL_PRINT
+  Serial.println( text );
+#endif
+}
+
+/*-------------------------------------------------------*/
+void serialPrint( const uint16_t number )
+{
+#ifdef USE_SERIAL_PRINT
+  Serial.print( number );
+#endif
+}
+
+/*-------------------------------------------------------*/
+void serialPrintln( const uint16_t number )
+{
+#ifdef USE_SERIAL_PRINT
+  Serial.println( number );
+#endif
+}
+
+/*-------------------------------------------------------*/
+void serialPrint( const int16_t number )
+{
+#ifdef USE_SERIAL_PRINT
+  Serial.print( number );
+#endif
+}
+
+/*-------------------------------------------------------*/
+void serialPrintln( const int16_t number )
+{
+#ifdef USE_SERIAL_PRINT
+  Serial.println( number );
 #endif
 }
