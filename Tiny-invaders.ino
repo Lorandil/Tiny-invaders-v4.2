@@ -365,7 +365,7 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
     render = pgm_RLEdecompress( render, chunkBuffer, 128 ); // sbr
 
     // prepare display of row <y>
-    TinyFlip_PrepareDisplayRow( y );
+    PrepareDisplayRow( y );
     
     for (x = 0; x < 128; x++)
     {
@@ -402,7 +402,7 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
         pixels = displayZoomedText(x,y);        
       }
       // send 8 vertical pixels to the display
-      TinyFlip_SendPixels( pixels );
+      SendPixels( pixels );
     } // for x
     
     if (render0_picture1 == GAME_SCREEN) {
@@ -414,7 +414,7 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
     }
 
     // this row has been finished
-    TinyFlip_FinishDisplayRow();
+    FinishDisplayRow();
   } // for y
   
   if (render0_picture1 == GAME_SCREEN) {
@@ -429,7 +429,7 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
   }
 
   // display the whole screen
-  TinyFlip_DisplayBuffer();
+  DisplayBuffer();
 }
 
 uint8_t UFOWrite(uint8_t x,uint8_t y,SPACE *space){

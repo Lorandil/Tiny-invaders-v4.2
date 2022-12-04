@@ -10,7 +10,9 @@
 #include <Arduino.h>
 #include "tinyJoypadUtils.h"
 
-#if !defined(__AVR_ATtiny85__)
+#if defined(__AVR_ATtiny85__)
+  #include <ssd1306xled.h>
+#else
   // include Adafruit library and immediately create an object
   #include <Adafruit_SSD1306.h>
   Adafruit_SSD1306 display( 128, 64, &Wire, -1 );
@@ -44,7 +46,7 @@ void InitTinyJoypad()
   pinMode( UP_DOWN_BUTTON, INPUT );
   pinMode( FIRE_BUTTON, INPUT );
   // configure SOUND_PIN as output (Pin D12 on Arduino UNO R3 and Pin D10 on Arduino Mega 2560 )
-  SOUND_PORT_DDR |= ( 1 << SOUND_PIN );
+  pinMode( SOUND_PIN, OUTPUT );
 
   // prepare serial port for debugging output
   Serial.begin( 115200 );
@@ -94,10 +96,10 @@ void waitUntilButtonsReleased()
 
 /*-------------------------------------------------------*/
 // wait until all buttons are released and wait a little delay
-void waitUntilButtonsReleased( const uint8_t delay )
+void waitUntilButtonsReleased( const uint8_t delayTime )
 {
   waitUntilButtonsReleased();
-  _delay_ms( delay );
+  _delay_ms( delayTime );
 }
 
 /*-------------------------------------------------------*/
@@ -160,10 +162,17 @@ void Sound( const uint8_t freq, const uint8_t dur )
 {
   for ( uint8_t t = 0; t < dur; t++ )
   {
-    if ( freq!=0 ){ SOUND_PORT = SOUND_PORT | ( 1 << SOUND_PIN); }
+#if defined(__AVR_ATtiny85__) /* codepath for ATtiny85 */
+    if ( freq != 0 ){ SOUND_PORT = SOUND_PORT | ( 1 << SOUND_PIN); }
     _variableDelay_us( 255 - freq );
     SOUND_PORT = SOUND_PORT & ~( 1 << SOUND_PIN );
     _variableDelay_us( 255 - freq );
+#else
+    if ( freq != 0 ){ digitalWrite( SOUND_PIN, 1 ); }
+    _variableDelay_us( 255 - freq );
+    digitalWrite( SOUND_PIN, 0 );
+    _variableDelay_us( 255 - freq );
+#endif
   }
 }
 
@@ -185,7 +194,7 @@ void InitDisplay()
 
 /*-------------------------------------------------------*/
 // This code will init the display for row <y>
-void TinyFlip_PrepareDisplayRow( uint8_t y )
+void PrepareDisplayRow( uint8_t y )
 {
 #if defined(__AVR_ATtiny85__)  /* codepath for ATtiny85 */
     // initialize image transfer to segment 'y'
@@ -210,7 +219,7 @@ void TinyFlip_PrepareDisplayRow( uint8_t y )
 }
 
 /*-------------------------------------------------------*/
-void TinyFlip_SendPixels( uint8_t pixels )
+void SendPixels( uint8_t pixels )
 {
 #if defined(__AVR_ATtiny85__) /* codepath for ATtiny85 */
   // send a byte directly to the SSD1306
@@ -224,7 +233,7 @@ void TinyFlip_SendPixels( uint8_t pixels )
 
 /*-------------------------------------------------------*/
 // This code will finish a row (only on Tiny85)
-void TinyFlip_FinishDisplayRow()
+void FinishDisplayRow()
 {
 #if defined(__AVR_ATtiny85__)
   // this line appears to be optional, as it was never called during the intro screen...
@@ -234,7 +243,7 @@ void TinyFlip_FinishDisplayRow()
 }
 
 /*-------------------------------------------------------*/
-void TinyFlip_DisplayBuffer()
+void DisplayBuffer()
 {
 #if !defined(__AVR_ATtiny85__) /* codepath for any Adafruit_SSD1306 supported MCU */
   // display buffer (not necessary)
@@ -242,7 +251,7 @@ void TinyFlip_DisplayBuffer()
 
   #ifndef _SERIAL_SCREENSHOT_NO_AUTO_SHOT_
     // check for screenshot request
-    TinyFlip_CheckForSerialScreenshot();
+    CheckForSerialScreenshot();
   #endif
 #endif
 }
@@ -253,7 +262,7 @@ void TinyFlip_DisplayBuffer()
 // (2) Then import the file with IrfanView (https://www.irfanview.com/): Open as -> RAW file...
 // (3) Set Image width to 64 and Image height to 128, 8 BPP -> OK
 // (4) Rotate and mirror the result as needed :)
-void TinyFlip_SerialScreenshot()
+void SerialScreenshot()
 {
 #if !defined(__AVR_ATtiny85__) /* codepath for any Adafruit_SSD1306 supported MCU */
   #ifdef _ENABLE_SERIAL_SCREENSHOT_
@@ -263,6 +272,7 @@ void TinyFlip_SerialScreenshot()
     Serial.println( F("(2) Then import the file with IrfanView (https://www.irfanview.com/): Open as -> RAW file...") );
     Serial.println( F("(3) Set Image width to 64 and Image height to 128, 8 BPP -> OK") );
     Serial.println( F("(4) Rotate and mirror the result as needed :)\r\n") );
+    Serial.println( F("Hint: If you only get partial screenshots, try using a terminal program to capture the serial output.") );
     // output the full buffer as a hexdump to the serial port
     printScreenBufferToSerial( display.getBuffer(), 128, 8 );
   #endif
@@ -273,14 +283,14 @@ void TinyFlip_SerialScreenshot()
 // Perform a screenshot if 
 //  [x] enabled and 
 //  [x] trigger condition met
-void TinyFlip_CheckForSerialScreenshot()
+void CheckForSerialScreenshot()
 {
 #if !defined(__AVR_ATtiny85__) /* codepath for any Adafruit_SSD1306 supported MCU */
   #ifdef _ENABLE_SERIAL_SCREENSHOT_
     if ( _SERIAL_SCREENSHOT_TRIGGER_CONDITION_ )
     {
       // perform the screenshot
-      TinyFlip_SerialScreenshot();
+      SerialScreenshot();
     }
   #endif
 #endif
@@ -322,7 +332,7 @@ void serialPrintln( const __FlashStringHelper *text )
 }
 
 /*-------------------------------------------------------*/
-void serialPrint( const uint16_t number )
+void serialPrint( const unsigned int number )
 {
 #ifdef USE_SERIAL_PRINT
   Serial.print( number );
@@ -330,7 +340,7 @@ void serialPrint( const uint16_t number )
 }
 
 /*-------------------------------------------------------*/
-void serialPrintln( const uint16_t number )
+void serialPrintln( const unsigned int number )
 {
 #ifdef USE_SERIAL_PRINT
   Serial.println( number );
@@ -338,7 +348,7 @@ void serialPrintln( const uint16_t number )
 }
 
 /*-------------------------------------------------------*/
-void serialPrint( const int16_t number )
+void serialPrint( const int number )
 {
 #ifdef USE_SERIAL_PRINT
   Serial.print( number );
@@ -346,7 +356,7 @@ void serialPrint( const int16_t number )
 }
 
 /*-------------------------------------------------------*/
-void serialPrintln( const int16_t number )
+void serialPrintln( const int number )
 {
 #ifdef USE_SERIAL_PRINT
   Serial.println( number );

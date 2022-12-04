@@ -1,7 +1,9 @@
 #if !defined(__AVR_ATtiny85__)
 
 #include <Arduino.h>
-#include <EEPROM.h>
+#if defined(__AVR__)
+  #include <EEPROM.h>
+#endif
 #include "SerialHexTools.h"
 
 /*--------------------------------------------------------------*/
@@ -16,15 +18,15 @@ void printHexToSerial( uint8_t value, bool addComma )
 {
   static uint8_t count = 0;
 
-  Serial.print("0x"); 
+  Serial.print( F("0x") );
   if ( value < 0x10 )
   {
-    Serial.print("0");
+    Serial.print( F("0") );
   }
   Serial.print( value, HEX );
   if ( addComma )
   {
-    Serial.print(", ");
+    Serial.print( F(", ") );
   }
 
   // increase count
@@ -55,6 +57,7 @@ void hexdumpToSerial( uint8_t *pData, uint16_t byteCount, bool finalComma, bool 
   }
 }
 
+#if defined(__AVR__)
 /*--------------------------------------------------------------*/
 // simple hexdump from EEPROM
 void EEPROM_hexdumpToSerial( uint16_t startAddress, uint16_t byteCount, bool finalComma, bool finalLinebreak )
@@ -70,6 +73,7 @@ void EEPROM_hexdumpToSerial( uint16_t startAddress, uint16_t byteCount, bool fin
     Serial.println();
   }
 }
+#endif
 
 /*--------------------------------------------------------------*/
 // simple hexdump from PROGMEM
