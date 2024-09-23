@@ -240,7 +240,7 @@ Bypass:
       else{
         GRIDMonsterFloorY(&space);
         space.anim=!space.anim;
-        if (space.anim==0){Sound(100,1);}
+        if (!space.anim){Sound(100,1);}
         else{Sound(200,1);}
         MonsterRefreshMove(&space);
         space.frame=0;
@@ -362,7 +362,7 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
   for (y = 0; y < 8; y++)
   {
     // uncompress chunk and save next address
-    render = pgm_RLEdecompress( render, chunkBuffer, 128 ); // sbr
+    render = pgm_RLEdecompress8( render, chunkBuffer, 128 ); // sbr
 
     // prepare display of row <y>
     PrepareDisplayRow( y );
@@ -683,45 +683,45 @@ uint8_t Murge_Split_UP_DOWN(uint8_t x,SPACE *space){
   uint8_t Murge2=0;
   if (space->DecalageY8==0) {
     SpriteType=space->MonsterGrid[space->PositionDansGrilleMonsterY][space->PositionDansGrilleMonsterX];
-    if (SpriteType<8) {ANIMs=(space->anim*14);}else{ANIMs=0;}
-    if (SpriteType==-1) {return 0x00;}
+    if (SpriteType < 8) {ANIMs=(space->anim*14);}else{ANIMs=0;}
+    if (SpriteType < 0) {return 0x00;}
     return pgm_read_byte(&Monsters[(WriteMonster14(x-space->MonsterGroupeXpos)+SpriteType*14)+ANIMs]);
   }
   else{ //debut
     if (space->PositionDansGrilleMonsterY==0) {
       SpriteType=space->MonsterGrid[space->PositionDansGrilleMonsterY][space->PositionDansGrilleMonsterX];
-      if (SpriteType<8) {ANIMs=(space->anim*14);}else{ANIMs=0;}
-      if (SpriteType!=-1) { Murge2=SplitSpriteDecalageY(pgm_read_byte(&Monsters[(WriteMonster14(x-space->MonsterGroupeXpos)+SpriteType*14)+ANIMs]),1,space);}
-      else{ Murge2=0x00;}
+      if (SpriteType < 8) {ANIMs=(space->anim*14);}else{ANIMs=0;}
+      if (SpriteType >= 0) { Murge2=SplitSpriteDecalageY(pgm_read_byte(&Monsters[(WriteMonster14(x-space->MonsterGroupeXpos)+SpriteType*14)+ANIMs]),1,space);}
+      //else{ Murge2=0x00;}
       return Murge2;    
     }
     else{
       SpriteType=space->MonsterGrid[space->PositionDansGrilleMonsterY-1][space->PositionDansGrilleMonsterX];
-      if (SpriteType<8) {ANIMs=(space->anim*14);}else{ANIMs=0;}
-      if (SpriteType!=-1) {Murge1=SplitSpriteDecalageY(pgm_read_byte(&Monsters[(WriteMonster14(x-space->MonsterGroupeXpos)+SpriteType*14)+ANIMs]),0,space);}
-      else{Murge1=0x00;}
+      if (SpriteType < 8) {ANIMs=(space->anim*14);}else{ANIMs=0;}
+      if (SpriteType >= 0) {Murge1=SplitSpriteDecalageY(pgm_read_byte(&Monsters[(WriteMonster14(x-space->MonsterGroupeXpos)+SpriteType*14)+ANIMs]),0,space);}
+      //else{Murge1=0x00;}
       SpriteType=space->MonsterGrid[space->PositionDansGrilleMonsterY][space->PositionDansGrilleMonsterX];
-      if (SpriteType<8) {ANIMs=(space->anim*14);}else{ANIMs=0;}
-      if (SpriteType!=-1) { Murge2=SplitSpriteDecalageY(pgm_read_byte(&Monsters[(WriteMonster14(x-space->MonsterGroupeXpos)+SpriteType*14)+ANIMs]),1,space);}
-      else{Murge2=0x00;}
+      if (SpriteType < 8) {ANIMs=(space->anim*14);}else{ANIMs=0;}
+      if (SpriteType >= 0) { Murge2=SplitSpriteDecalageY(pgm_read_byte(&Monsters[(WriteMonster14(x-space->MonsterGroupeXpos)+SpriteType*14)+ANIMs]),1,space);}
+      //else{Murge2=0x00;}
       return Murge1|Murge2;    
     }  
   } //fin
 }
 
 uint8_t WriteMonster14(uint8_t x){
-  while(1){
-    if ((x-14)>=0) {x=x-14;}else{break;}
+  while( x >= 14 )
+  {
+    x -= 14;
   }
   return x;
 }
 
 uint8_t Monster(uint8_t x,uint8_t y,SPACE *space){
-  if (OuDansLaGrilleMonster(x,y,space)!=-1) {
-  }
-  else{return 0x00;} //quiter la fonction si pas dans la grille
-  return  Murge_Split_UP_DOWN(x,space);
-  return 0x00;
+  if (OuDansLaGrilleMonster(x,y,space)==-1) 
+  {return 0x00;} //quiter la fonction si pas dans la grille
+  return Murge_Split_UP_DOWN(x,space);
+  //return 0x00;
 }//end Monster();
 
 uint8_t MonsterRefreshMove(SPACE *space){

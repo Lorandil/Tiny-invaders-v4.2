@@ -33,7 +33,7 @@ uint8_t ScrBackV;
 int8_t  MyShootBall;
 uint8_t MyShootBallxpos;
 uint8_t MyShootBallFrame;
-uint8_t anim;
+bool    anim;
 uint8_t frame;
 uint8_t PositionDansGrilleMonsterX;
 uint8_t PositionDansGrilleMonsterY;

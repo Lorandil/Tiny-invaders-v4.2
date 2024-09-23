@@ -13,4 +13,11 @@
 #else
   uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
                               uint8_t *uncompressedData, uint16_t uncompressedByteCount );
+#if defined(__AVR_ATtiny85__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega32U4__)
+  extern "C" uint8_t *pgm_RLEdecompress8( uint8_t *compressedData,
+                                          uint8_t *uncompressedData, uint8_t uncompressedByteCount );
+#else
+  uint8_t *pgm_RLEdecompress8( uint8_t *compressedData,
+                               uint8_t *uncompressedData, uint8_t uncompressedByteCount );
+#endif                              
 #endif
