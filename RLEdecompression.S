@@ -27,11 +27,14 @@
 ;                           )
 ;
 pgm_RLEdecompress8:
-    mov  ZH,compressedData_H
-    mov  ZL,compressedData_L
+ret
+    ;mov  ZH,compressedData_H
+    ;mov  ZL,compressedData_L
+    movw ZL,compressedData_L
 
-    mov  XH,uncompressedData_H
-    mov  XL,uncompressedData_L
+    ;mov  XH,uncompressedData_H
+    ;mov  XL,uncompressedData_L
+    movw XL,uncompressedData_L
 
 RLEdecompress_do:       // do{
        
@@ -68,11 +71,13 @@ uncompressed_data_fill: // do {
     brne uncompressed_data_fill // } while ( count > 0 )
     
 RLEdecompress_while:
-	cpse uncompressedByteCount,R1 //} while ( uncompressedByteCount != 0 )
-	rjmp RLEdecompress_do
+	  cpse uncompressedByteCount,R1 //} while ( uncompressedByteCount != 0 )
+	  rjmp RLEdecompress_do
 
-  mov  compressedData_H,ZH // return( compressedData );
-  mov  compressedData_L,ZL
-	ret
+    ;mov  compressedData_H,ZH // return( compressedData );
+    ;mov  compressedData_L,ZL
+    movw compressedData_L,ZL
+
+	  ret
 
 #endif
