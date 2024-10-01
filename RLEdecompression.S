@@ -1,5 +1,3 @@
-#pragma once
-
 #if defined(__AVR_ATtiny85__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega32U4__)
       .file "RLEdecompression.S"
       .text
@@ -10,11 +8,13 @@
 #define compressedData_L        R24
 #define uncompressedData_H      R23
 #define uncompressedData_L      R22
-#define uncompressedByteCount   R21
+#define uncompressedByteCount   R20
 /*--------------------------------*/
-#define value                   R19
-#define count                   R18
-
+#define value                   R25
+#define count                   R24
+/*--------------------------------*/
+#define ZERO_REG                 R1
+#define TEMP_REG                 R0
 
 ; Parameters in GCC convention
 ; R0 is free
@@ -23,17 +23,11 @@
 ; T flag is free
 ; uint8_t *pgm_RLEdecompress( uint8_t *compressedData,        R25:R24
 ;                             uint8_t *uncompressedData,      R23:R22
-;                             uint8_t  uncompressedByteCount  R21
+;                             uint8_t  uncompressedByteCount  R20
 ;                           )
 ;
 pgm_RLEdecompress8:
-ret
-    ;mov  ZH,compressedData_H
-    ;mov  ZL,compressedData_L
     movw ZL,compressedData_L
-
-    ;mov  XH,uncompressedData_H
-    ;mov  XL,uncompressedData_L
     movw XL,uncompressedData_L
 
 RLEdecompress_do:       // do{
@@ -45,7 +39,7 @@ RLEdecompress_do:       // do{
 compressed_data:
     // prepare special value (just in case)
   	 						        // uint8_t value = (count & RLE_COMPRESSED_0xFF ) ? 0xff : 0x00;
-    mov  value,R1				// value = 0x00
+    mov  value,ZERO_REG	// value = 0x00
     sbrc count,6				// !count & RLE_COMPRESSED_0xFF
     subi value,1				// value = 0xff
     sbrc count,5				// !count & RLE_COMPRESSED_0x00
@@ -71,11 +65,9 @@ uncompressed_data_fill: // do {
     brne uncompressed_data_fill // } while ( count > 0 )
     
 RLEdecompress_while:
-	  cpse uncompressedByteCount,R1 //} while ( uncompressedByteCount != 0 )
+	  cpse uncompressedByteCount,ZERO_REG //} while ( uncompressedByteCount != 0 )
 	  rjmp RLEdecompress_do
 
-    ;mov  compressedData_H,ZH // return( compressedData );
-    ;mov  compressedData_L,ZL
     movw compressedData_L,ZL
 
 	  ret
