@@ -12,9 +12,9 @@
 /*--------------------------------*/
 #define value                   R25
 #define count                   R24
+#define temp                    R19
 /*--------------------------------*/
 #define ZERO_REG                 R1
-#define TEMP_REG                 R0
 
 ; Parameters in GCC convention
 ; R0 is free
@@ -40,10 +40,13 @@ compressed_data:
     // prepare special value (just in case)
   	 						        // uint8_t value = (count & RLE_COMPRESSED_0xFF ) ? 0xff : 0x00;
     mov  value,ZERO_REG	// value = 0x00
-    sbrc count,6				// !count & RLE_COMPRESSED_0xFF
+    sbrc count,6				// count & RLE_COMPRESSED_0xFF
     subi value,1				// value = 0xff
-    sbrc count,5				// !count & RLE_COMPRESSED_0x00
+	  mov  temp,count     // copy 'count'
+	  andi temp,0x60		  // if ( !( count & ( RLE_COMPRESSED_0xFF | RLE_COMPRESSED_0x00 ) ) )
+	  brne decompress_data_start
     lpm  value,Z+				// value = pgm_read_byte( compressedData++ );
+decompress_data_start:
     // remove special bits
     andi count,0x1f     // count &= 0x1f;
     inc  count					// count++

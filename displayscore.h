@@ -6,7 +6,7 @@ typedef uint16_t SCORE_TYPE;
 
 typedef struct {
   SCORE_TYPE score;
-  char       name[3];
+  uint8_t    name[3];
   uint8_t    crcFix;
 } HISCORE;
 
@@ -27,7 +27,7 @@ SCORE_TYPE __attribute__ ((noinline)) getHighScorePoints();
 uint8_t __attribute__ ((noinline)) calcHighScoreCRC();
 // Attention: The returned string has a fixed size of 3 bytes 
 // and is *not* terminated with zero!
-char __attribute__ ((noinline))*getHighScoreName();
+uint8_t __attribute__ ((noinline))*getHighScoreName();
 
 // EEPROM functions
 void __attribute__ ((noinline)) initHighScoreStruct( uint16_t gameAddr );

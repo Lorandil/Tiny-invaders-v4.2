@@ -322,14 +322,8 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
   uint8_t MYSHIELD /*=0x00*/;
 
   // select the appropriate bitmap
-  uint8_t *render;  // sbr <start>
-  if ( render0_picture1 == GAME_SCREEN ) {
-    render = back_compressed;
-  }
-  else /* INTRO_SCREEN *or* BLANK_SCREEN */
-  {
-    render = intro_compressed;
-  }; // sbr <end>
+  const uint8_t *render = ( render0_picture1 == GAME_SCREEN ) ? back_compressed   /* BACKGROUND */
+                                                              : intro_compressed; /* INTRO_SCREEN *or* BLANK_SCREEN */
 
   // we want an arcade style live highscore display
   newHighScore |= updateHighScorePoints();  // sbr

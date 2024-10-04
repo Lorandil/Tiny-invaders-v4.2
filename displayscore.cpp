@@ -71,7 +71,7 @@ uint8_t calcHighScoreCRC()
 /*--------------------------------------------------------------*/
 // Attention: The returned string has a fixed size of 3 bytes 
 // and is *not* terminated with zero!
-char *getHighScoreName()
+uint8_t *getHighScoreName()
 {
   return( _hiScore.name );
 }
