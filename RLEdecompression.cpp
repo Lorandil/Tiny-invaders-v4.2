@@ -8,7 +8,7 @@
 //         uncompressedByteCount - size of uncompressed data in bytes
 //         mirrorFlag            - mirror the data while uncompressing
 #ifdef _RLE_MIRROR_SUPPORT_
-uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
+uint8_t *pgm_RLEdecompress( const uint8_t *compressedData,
                             uint8_t *uncompressedData, uint16_t uncompressedByteCount,
                             bool     mirrorFlag )
 #else
@@ -93,7 +93,7 @@ uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
 // Input:  compressedData        - pointer to compressed data in PROGMEM
 //         uncompressedData      - output buffer
 //         uncompressedByteCount - size of uncompressed data in bytes
-uint8_t *pgm_RLEdecompress8( uint8_t *compressedData,
+uint8_t *pgm_RLEdecompress8( const uint8_t *compressedData,
                              uint8_t *uncompressedData,
                              uint8_t  uncompressedByteCount )
 {
