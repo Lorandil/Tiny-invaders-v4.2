@@ -1,4 +1,4 @@
-#if defined(__AVR_ATtiny85__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega32U4__)
+#if defined(__AVR_ATtiny85__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32U4__)
       .file "RLEdecompression.S"
       .text
       .global pgm_RLEdecompress8

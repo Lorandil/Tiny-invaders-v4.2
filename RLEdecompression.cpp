@@ -87,7 +87,7 @@ uint8_t *pgm_RLEdecompress( uint8_t *compressedData,
   return( compressedData );
 }
 
-#if !defined(__AVR_ATtiny85__) && !defined(__AVR_ATmega328P__) && !defined(__AVR_ATmega2560__) && !defined(__AVR_ATmega32U4__)
+#if !defined(__AVR_ATtiny85__) && !defined(__AVR_ATmega328P__) && !defined(__AVR_ATmega32U4__)
 /*--------------------------------------------------------------*/
 // Faster routine with max block size of 256 bytes (replaced by assembly routine on AVR)
 // Input:  compressedData        - pointer to compressed data in PROGMEM
