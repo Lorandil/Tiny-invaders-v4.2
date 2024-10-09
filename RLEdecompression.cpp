@@ -142,3 +142,199 @@ uint8_t *pgm_RLEdecompress8( const uint8_t *compressedData,
   return( compressedData );
 }
 #endif
+
+/*--------------------------------------------------------------*/
+// Decompressor for standard encoding with up to 32 subsequent values
+// Input:  pCompressedData       - pointer to compressed data in RAM
+//         uncompressedDatar     - output buffer
+//         uncompressedByteCount - size of uncompressed data in bytes
+uint8_t *RLEdecompress( const uint8_t *compressedData,
+                        uint8_t *uncompressedData, uint16_t uncompressedByteCount )
+{
+  while ( uncompressedByteCount != 0 )
+  {
+    uint8_t count = *compressedData++;
+
+    if ( count & RLE_COMPRESSED_DATA  )
+    {
+      // prepare special value (just in case)
+      uint8_t value = (count & RLE_COMPRESSED_0xFF ) ? 0xff : 0x00;
+      // special value?
+      if ( !( count & ( RLE_COMPRESSED_0xFF | RLE_COMPRESSED_0x00 ) ) )
+      {
+        // get stored value
+        value = *compressedData++;
+      }
+      
+      // remove special bit
+      count &= 0x1f;
+      // add one item again
+      count++;
+
+      // uncompress RLE compressed data
+      for ( uint8_t n = 0; n < count; n++ )
+      {
+        *uncompressedData++ = value;
+      }
+    }
+    else
+    {
+      // add one item again
+      count++;
+
+      // copy stored uncompressed data
+      for ( uint8_t n = 0; n < count; n++ )
+      {
+        *uncompressedData++ = *compressedData++;
+      }
+    }
+    // remove processed bytes from count
+    uncompressedByteCount -= count;
+  }
+
+  return( compressedData );
+}
+
+
+/*--------------------------------------------------------------*/
+// Decompressor for extended encoding with up to 63 subsequent values
+// Input:  pCompressedData       - pointer to compressed data in RAM
+//         uncompressedDatar     - output buffer
+//         uncompressedByteCount - size of uncompressed data in bytes
+uint8_t *RLEdecompressExtended( const uint8_t *compressedData, 
+                                uint8_t *uncompressedData, uint16_t uncompressedByteCount )
+{
+  while ( uncompressedByteCount != 0 )
+  {
+    uint8_t count = *compressedData++;
+
+    uint8_t encoding = ( count & RLE2_COMPRESSION_MASK );
+    // uncompressed data?
+    if ( encoding == RLE2_UNCOMPRESSED_DATA )
+    {
+      // copy stored uncompressed data
+      for ( uint8_t n = 0; n < count; n++ )
+      {
+        *uncompressedData++ = *compressedData++;
+      }
+    }
+    // compressed data
+    else
+    {
+      uint8_t value = ( encoding > RLE2_COMPRESSED_0x00_DATA ) ? 0xFF
+                                                                : ( encoding < RLE2_COMPRESSED_0x00_DATA ) ? *compressedData++
+                                                                                                           : 0x00;
+      // remove encoding bits
+      count -= encoding;
+
+      // uncompress RLE compressed data
+      for ( uint8_t n = 0; n < count; n++ )
+      {
+        *uncompressedData++ = value;
+      }
+    }
+
+    // remove processed bytes from count
+    uncompressedByteCount -= count;
+  }
+
+  return( compressedData );
+}
+
+
+/*--------------------------------------------------------------*/
+// Decompressor for standard encoding with up to 32 subsequent values
+// Input:  compressedData        - pointer to compressed data in PROGMEM
+//         uncompressedDatar     - output buffer
+//         uncompressedByteCount - size of uncompressed data in bytes
+uint8_t *pgm_RLEdecompress( const uint8_t *compressedData,
+                            uint8_t *uncompressedData, uint16_t uncompressedByteCount )
+{
+  while ( uncompressedByteCount != 0 )
+  {
+    uint8_t count = pgm_read_byte( compressedData++ );
+
+    if ( count & RLE_COMPRESSED_DATA  )
+    {
+      // prepare special value (just in case)
+      uint8_t value = (count & RLE_COMPRESSED_0xFF ) ? 0xff : 0x00;
+      // special value?
+      if ( !( count & ( RLE_COMPRESSED_0xFF | RLE_COMPRESSED_0x00 ) ) )
+      {
+        // get stored value
+        value = pgm_read_byte( compressedData++ );
+      }
+      
+      // remove special bit
+      count &= 0x1f;
+      // add one item again
+      count++;
+      
+      // uncompress RLE compressed data
+      for ( uint8_t n = 0; n < count; n++ )
+      {
+        *uncompressedData++ = value;
+      }
+    }
+    else
+    {
+      // add one item again
+      count++;
+      // copy stored uncompressed data
+      for ( uint8_t n = 0; n < count; n++ )
+      {
+        *uncompressedData++ = pgm_read_byte( compressedData++ );
+      }
+    }
+    // remove processed bytes from count
+    uncompressedByteCount -= count;
+  }
+
+  return( compressedData );
+}
+
+
+/*--------------------------------------------------------------*/
+// Decompressor for extended encoding with up to 63 subsequent values
+// Input:  pCompressedData       - pointer to compressed data in PROGMEM
+//         uncompressedDatar     - output buffer
+//         uncompressedByteCount - size of uncompressed data in bytes
+uint8_t *pgm_RLEdecompressExtended( const uint8_t *compressedData, 
+                                    uint8_t *uncompressedData, uint16_t uncompressedByteCount )
+{
+  while ( uncompressedByteCount != 0 )
+  {
+    uint8_t count = pgm_read_byte( compressedData++ );
+
+    uint8_t encoding = ( count & RLE2_COMPRESSION_MASK );
+    // uncompressed data?
+    if ( encoding == RLE2_UNCOMPRESSED_DATA )
+    {
+      // copy stored uncompressed data
+      for ( uint8_t n = 0; n < count; n++ )
+      {
+        *uncompressedData++ = pgm_read_byte( compressedData++ );
+      }
+    }
+    // compressed data
+    else
+    {
+      uint8_t value = ( encoding > RLE2_COMPRESSED_0x00_DATA ) ? 0xFF
+                                                                : ( encoding < RLE2_COMPRESSED_0x00_DATA ) ? pgm_read_byte( compressedData++ )
+                                                                                                           : 0x00;
+      // remove encoding bits
+      count -= encoding;
+
+      // uncompress RLE compressed data
+      for ( uint8_t n = 0; n < count; n++ )
+      {
+        *uncompressedData++ = value;
+      }
+    }
+
+    // remove processed bytes from count
+    uncompressedByteCount -= count;
+  }
+
+  return( compressedData );
+}

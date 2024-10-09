@@ -21,10 +21,10 @@
 ; R1 := 0
 ; R18..R27, R30..R31 are free
 ; T flag is free
-; uint8_t *pgm_RLEdecompress( uint8_t *compressedData,        R25:R24
-;                             uint8_t *uncompressedData,      R23:R22
-;                             uint8_t  uncompressedByteCount  R20
-;                           )
+; uint8_t *pgm_RLEdecompress8( uint8_t *compressedData,        R25:R24
+;                              uint8_t *uncompressedData,      R23:R22
+;                              uint8_t  uncompressedByteCount  R20
+;                            )
 ;
 pgm_RLEdecompress8:
     movw ZL,compressedData_L

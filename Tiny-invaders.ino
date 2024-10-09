@@ -356,7 +356,7 @@ void Tiny_Flip(uint8_t render0_picture1,SPACE *space){
   for (y = 0; y < 8; y++)
   {
     // uncompress chunk and save next address
-    render = pgm_RLEdecompress8( render, chunkBuffer, 128 ); // sbr
+    render = pgm_RLEdecompressExt8( render, chunkBuffer, 128 ); // sbr
 
     // prepare display of row <y>
     PrepareDisplayRow( y );
